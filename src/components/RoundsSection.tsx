@@ -10,7 +10,7 @@ import RoundView from './RoundView'
 interface Props {
   groupSlug: string
   members: Member[]
-  clientId: string
+  userId: string
 }
 
 // Standard-Runde: die neueste offene, sonst die neueste überhaupt
@@ -19,7 +19,7 @@ function defaultRound(rounds: Round[]): Round | undefined {
   return (open.length ? open : rounds).at(-1)
 }
 
-export default function RoundsSection({ groupSlug, members, clientId }: Props) {
+export default function RoundsSection({ groupSlug, members, userId }: Props) {
   const { rounds, loaded, error, reload } = useRounds(groupSlug)
   const [params, setParams] = useSearchParams()
   const [creating, setCreating] = useState(false)
@@ -35,7 +35,7 @@ export default function RoundsSection({ groupSlug, members, clientId }: Props) {
     return (
       <CreateRoundForm
         groupSlug={groupSlug}
-        clientId={clientId}
+        userId={userId}
         onCancel={() => setCreating(false)}
         onCreated={(id) => {
           setCreating(false)
@@ -65,7 +65,7 @@ export default function RoundsSection({ groupSlug, members, clientId }: Props) {
         <p className="text-gray-500">Lade Runden…</p>
       ) : !selected ? (
         <>
-          <MemberBar members={members} clientId={clientId} />
+          <MemberBar members={members} userId={userId} />
           <div className="rounded-2xl border border-dashed border-gray-300 p-6 text-center text-gray-600">
             Noch keine Runde. Leg die erste an, z.B. für den nächsten Ausflug.
           </div>
@@ -98,7 +98,7 @@ export default function RoundsSection({ groupSlug, members, clientId }: Props) {
             key={selected.id}
             round={selected}
             members={members}
-            clientId={clientId}
+            userId={userId}
             onDeleted={() => {
               select(null)
               void reload()

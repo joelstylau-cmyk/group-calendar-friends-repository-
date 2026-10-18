@@ -1,4 +1,4 @@
-// Avatar-Farben für Mitglieder. Stabil pro clientId, damit jede Person
+// Avatar-Farben für Mitglieder. Stabil pro User-ID, damit jede Person
 // auf allen Geräten dieselbe Farbe hat.
 const MEMBER_COLORS = [
   '#5b6cff', // periwinkle
@@ -11,10 +11,10 @@ const MEMBER_COLORS = [
   '#2f9e44', // grün
 ]
 
-export function colorForClientId(clientId: string): string {
+export function colorForId(id: string): string {
   let hash = 0
-  for (let i = 0; i < clientId.length; i++) {
-    hash = (hash * 31 + clientId.charCodeAt(i)) | 0
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) | 0
   }
   return MEMBER_COLORS[Math.abs(hash) % MEMBER_COLORS.length]
 }

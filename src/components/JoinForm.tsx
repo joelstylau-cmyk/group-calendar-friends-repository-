@@ -1,21 +1,20 @@
 import { useState, type FormEvent } from 'react'
-import { getSupabase } from '../lib/supabase'
-import { colorForClientId } from '../lib/colors'
-import { loadProfile, saveProfile } from '../lib/profile'
+import { displayNameOf, useUser } from '../lib/auth'
+import { colorForId } from '../lib/colors'
+import { getSupabase, UNIQUE_VIOLATION } from '../lib/supabase'
 
 const EMOJIS = ['😎', '🦊', '🐸', '🐼', '🦄', '🐙', '🌻', '🍕', '⚽', '🎸', '🚲', '🌊']
 
 interface Props {
   groupSlug: string
   groupName: string
-  clientId: string
   onJoined: () => void
 }
 
-export default function JoinForm({ groupSlug, groupName, clientId, onJoined }: Props) {
-  const saved = loadProfile()
-  const [name, setName] = useState(saved?.name ?? '')
-  const [emoji, setEmoji] = useState<string | null>(saved?.emoji ?? null)
+export default function JoinForm({ groupSlug, groupName, onJoined }: Props) {
+  const user = useUser()
+  const [name, setName] = useState(() => displayNameOf(user).slice(0, 30))
+  const [emoji, setEmoji] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -25,25 +24,16 @@ export default function JoinForm({ groupSlug, groupName, clientId, onJoined }: P
     if (!trimmed) return
     setBusy(true)
     setError(null)
-    // upsert: falls die Zeile schon existiert (z.B. Doppelklick), einfach aktualisieren
+    // user_id und role setzt die Datenbank (Default auth.uid() bzw. 'member').
     const { error } = await getSupabase()
       .from('members')
-      .upsert(
-        {
-          group_slug: groupSlug,
-          client_id: clientId,
-          name: trimmed,
-          emoji,
-          color: colorForClientId(clientId),
-        },
-        { onConflict: 'group_slug,client_id' },
-      )
+      .insert({ group_slug: groupSlug, name: trimmed, emoji, color: colorForId(user.id) })
     setBusy(false)
-    if (error) {
+    // Schon Mitglied (z.B. Doppelklick oder zweiter Tab): einfach weiter.
+    if (error && error.code !== UNIQUE_VIOLATION) {
       setError(`Beitreten hat nicht geklappt: ${error.message}`)
       return
     }
-    saveProfile({ name: trimmed, emoji })
     onJoined()
   }
 

@@ -5,7 +5,7 @@ import RoundCalendar from './RoundCalendar'
 
 interface Props {
   groupSlug: string
-  clientId: string
+  userId: string
   onCreated: (roundId: string) => void
   onCancel: () => void
 }
@@ -13,7 +13,7 @@ interface Props {
 const inputClass =
   'w-full rounded-lg border border-gray-300 px-3 py-2 text-base outline-none focus:border-[#5b6cff] focus:ring-2 focus:ring-[#5b6cff]/30'
 
-export default function CreateRoundForm({ groupSlug, clientId, onCreated, onCancel }: Props) {
+export default function CreateRoundForm({ groupSlug, userId, onCreated, onCancel }: Props) {
   const [title, setTitle] = useState('')
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
@@ -63,7 +63,7 @@ export default function CreateRoundForm({ groupSlug, clientId, onCreated, onCanc
         end_date: end,
         excluded_dates: excludedInRange,
         headcount: headcountNumber,
-        created_by: clientId,
+        created_by: userId,
       })
       .select('id')
       .single()

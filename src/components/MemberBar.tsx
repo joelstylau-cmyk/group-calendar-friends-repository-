@@ -3,14 +3,14 @@ import Avatar from './Avatar'
 
 interface Props {
   members: Member[]
-  clientId: string
+  userId: string
   // Wenn gesetzt: zeigt pro Person, ob sie in der aktuellen Runde geantwortet hat.
   answered?: Set<string>
   target?: number
 }
 
-export default function MemberBar({ members, clientId, answered, target }: Props) {
-  const answeredCount = answered ? members.filter((m) => answered.has(m.client_id)).length : 0
+export default function MemberBar({ members, userId, answered, target }: Props) {
+  const answeredCount = answered ? members.filter((m) => answered.has(m.user_id)).length : 0
 
   return (
     <section aria-label="Mitglieder">
@@ -24,7 +24,7 @@ export default function MemberBar({ members, clientId, answered, target }: Props
       ) : (
         <ul className="-mx-4 flex gap-4 overflow-x-auto px-4 pt-1 pb-2">
           {members.map((m) => {
-            const hasAnswered = answered?.has(m.client_id) ?? true
+            const hasAnswered = answered?.has(m.user_id) ?? true
             return (
               <li key={m.id} className="flex w-16 shrink-0 flex-col items-center gap-1 text-center">
                 <span className={`relative ${hasAnswered ? '' : 'opacity-40'}`}>
@@ -37,7 +37,7 @@ export default function MemberBar({ members, clientId, answered, target }: Props
                 </span>
                 <span className="w-full truncate text-xs">
                   {m.name}
-                  {m.client_id === clientId && <span className="text-gray-500"> (du)</span>}
+                  {m.user_id === userId && <span className="text-gray-500"> (du)</span>}
                 </span>
                 {answered && !hasAnswered && <span className="sr-only">hat noch nicht geantwortet</span>}
               </li>

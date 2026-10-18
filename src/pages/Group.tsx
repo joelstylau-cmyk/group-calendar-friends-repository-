@@ -4,7 +4,7 @@ import JoinForm from '../components/JoinForm'
 import RoundsSection from '../components/RoundsSection'
 import ShareButton from '../components/ShareButton'
 import { useMembers } from '../hooks/useMembers'
-import { getClientId } from '../lib/clientId'
+import { useUser } from '../lib/auth'
 import { getSupabase } from '../lib/supabase'
 import type { Group as GroupRow } from '../lib/types'
 
@@ -21,10 +21,9 @@ export default function Group() {
   useEffect(() => {
     let cancelled = false
     setState({ kind: 'loading' })
+    // Über die Funktion get_group, weil Nicht-Mitglieder die Tabelle groups nicht lesen dürfen.
     getSupabase()
-      .from('groups')
-      .select('slug, name, created_at')
-      .eq('slug', slug)
+      .rpc('get_group', { p_slug: slug })
       .maybeSingle()
       .then(({ data, error }) => {
         if (cancelled) return
@@ -66,9 +65,9 @@ export default function Group() {
 }
 
 function GroupView({ group }: { group: GroupRow }) {
-  const clientId = getClientId()
+  const userId = useUser().id
   const { members, loaded, error, reload } = useMembers(group.slug)
-  const isMember = members.some((m) => m.client_id === clientId)
+  const isMember = members.some((m) => m.user_id === userId)
 
   return (
     <main className="mx-auto max-w-md space-y-6 px-4 py-6">
@@ -82,14 +81,9 @@ function GroupView({ group }: { group: GroupRow }) {
       {!loaded ? (
         <p className="text-gray-500">Lade Mitglieder…</p>
       ) : isMember ? (
-        <RoundsSection groupSlug={group.slug} members={members} clientId={clientId} />
+        <RoundsSection groupSlug={group.slug} members={members} userId={userId} />
       ) : (
-        <JoinForm
-          groupSlug={group.slug}
-          groupName={group.name}
-          clientId={clientId}
-          onJoined={reload}
-        />
+        <JoinForm groupSlug={group.slug} groupName={group.name} onJoined={reload} />
       )}
     </main>
   )

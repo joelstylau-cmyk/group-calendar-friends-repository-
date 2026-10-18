@@ -9,10 +9,11 @@ export interface Group {
 export interface Member {
   id: string
   group_slug: string
-  client_id: string
+  user_id: string // Supabase-Auth-User-ID
   name: string
   emoji: string | null
   color: string | null
+  role: 'member' | 'admin'
   created_at: string
 }
 
@@ -24,7 +25,7 @@ export type DayMap = Record<string, DayStatus>
 export interface Availability {
   id: string
   round_id: string
-  client_id: string
+  user_id: string
   days: DayMap
   updated_at: string
 }
@@ -41,6 +42,6 @@ export interface Round {
   headcount: number | null
   status: RoundStatus
   decided_dates: string[] | null
-  created_by: string | null
+  created_by: string | null // User-ID des Erstellers
   created_at: string
 }

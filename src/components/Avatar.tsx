@@ -1,8 +1,8 @@
 import type { Member } from '../lib/types'
-import { colorForClientId } from '../lib/colors'
+import { colorForId } from '../lib/colors'
 
 export default function Avatar({ member, size = 40 }: { member: Member; size?: number }) {
-  const color = member.color ?? colorForClientId(member.client_id)
+  const color = member.color ?? colorForId(member.user_id)
   return (
     <span
       className="inline-flex shrink-0 items-center justify-center rounded-full font-semibold text-white"

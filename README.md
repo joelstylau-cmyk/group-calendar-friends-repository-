@@ -1,6 +1,6 @@
 # Gruppenkalender
 
-Termine für Freundesgruppen finden, ohne Login. Build-Spec: siehe `SPEC.md`.
+Termine für Freundesgruppen finden. Login mit Google. Build-Spec: siehe `SPEC.md`.
 
 ## Setup
 
@@ -10,7 +10,9 @@ cp .env.example .env   # dann VITE_SUPABASE_URL und VITE_SUPABASE_ANON_KEY eintr
 npm run dev
 ```
 
+Datenbank: `supabase/schema.sql` im Supabase SQL-Editor ausführen (setzt alles zurück).
+
 ## Hinweise
 
-- Identität pro Gerät über eine zufällige `clientId` in localStorage. Wer das Gerät oder den Browser wechselt, ist eine neue Person.
+- Identität ist das Google-Konto (Supabase Auth). Redirect URLs in Supabase müssen jede Herkunft mit `/**` erlauben.
 - Nur der Supabase anon-Key gehört in `.env`, niemals der service-role-Key.

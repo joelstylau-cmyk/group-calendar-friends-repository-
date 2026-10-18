@@ -13,14 +13,14 @@ import MemberBar from './MemberBar'
 interface Props {
   round: Round
   members: Member[]
-  clientId: string
+  userId: string
   onDeleted: () => void
 }
 
-export default function RoundView({ round, members, clientId, onDeleted }: Props) {
+export default function RoundView({ round, members, userId, onDeleted }: Props) {
   const { rows, loaded, error } = useLiveRows<Availability>('availability', 'round_id', round.id, 'updated_at')
-  const myRow = rows.find((r) => r.client_id === clientId)
-  const draft = useAvailabilityDraft(round.id, clientId, loaded ? (myRow?.days ?? {}) : null)
+  const myRow = rows.find((r) => r.user_id === userId)
+  const draft = useAvailabilityDraft(round.id, userId, loaded ? (myRow?.days ?? {}) : null)
   const [sheetDays, setSheetDays] = useState<string[] | null>(null)
   const closeSheet = useCallback(() => setSheetDays(null), [])
 
@@ -30,11 +30,11 @@ export default function RoundView({ round, members, clientId, onDeleted }: Props
   const openDays = windowDays.filter((d) => !excluded.has(d))
 
   // Alle Einträge; mein eigener kommt aus dem lokalen Entwurf, damit alles sofort mitzieht.
-  const entries = new Map<string, DayMap>(rows.map((r) => [r.client_id, r.days]))
-  entries.set(clientId, draft.days)
-  const membersById = new Map(members.map((m) => [m.client_id, m]))
+  const entries = new Map<string, DayMap>(rows.map((r) => [r.user_id, r.days]))
+  entries.set(userId, draft.days)
+  const membersById = new Map(members.map((m) => [m.user_id, m]))
   // Personen = Mitglieder plus evtl. Einträge von Geräten ohne Mitgliedszeile
-  const people = [...new Set([...members.map((m) => m.client_id), ...rows.map((r) => r.client_id)])]
+  const people = [...new Set([...members.map((m) => m.user_id), ...rows.map((r) => r.user_id)])]
 
   const answered = new Set(people.filter((p) => openDays.some((d) => entries.get(p)?.[d])))
   const dayStats = Object.fromEntries(openDays.map((d) => [d, classifyBlock([d], people, entries)]))
@@ -42,7 +42,7 @@ export default function RoundView({ round, members, clientId, onDeleted }: Props
   const highlight = new Set(ranking.blocks[0]?.days ?? [])
 
   const creator = membersById.get(round.created_by ?? '')
-  const isCreator = round.created_by === clientId
+  const isCreator = round.created_by === userId
   const days = dayCount(round.start_date, round.end_date)
 
   return (
@@ -60,7 +60,7 @@ export default function RoundView({ round, members, clientId, onDeleted }: Props
 
       <MemberBar
         members={members}
-        clientId={clientId}
+        userId={userId}
         answered={answered}
         target={round.headcount ?? members.length}
       />
@@ -100,7 +100,7 @@ export default function RoundView({ round, members, clientId, onDeleted }: Props
         <BlockSheet
           result={classifyBlock(sheetDays, people, entries)}
           membersById={membersById}
-          clientId={clientId}
+          userId={userId}
           onClose={closeSheet}
         />
       )}

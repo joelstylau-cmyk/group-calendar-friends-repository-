@@ -8,12 +8,12 @@ import Avatar from './Avatar'
 interface Props {
   result: BlockResult
   membersById: Map<string, Member>
-  clientId: string
+  userId: string
   onClose: () => void
 }
 
 // Bottom-Sheet: wer kann an diesem Tag bzw. Block?
-export default function BlockSheet({ result, membersById, clientId, onClose }: Props) {
+export default function BlockSheet({ result, membersById, userId, onClose }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
@@ -83,7 +83,7 @@ export default function BlockSheet({ result, membersById, clientId, onClose }: P
                         {member && <Avatar member={member} size={28} />}
                         <span className="text-sm">
                           {member?.name ?? 'Unbekannt'}
-                          {id === clientId && <span className="text-gray-500"> (du)</span>}
+                          {id === userId && <span className="text-gray-500"> (du)</span>}
                         </span>
                       </li>
                     )

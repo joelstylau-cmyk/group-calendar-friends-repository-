@@ -10,7 +10,7 @@ const DEBOUNCE_MS = 800
 // Nach dem ersten Laden ist der lokale Stand maßgeblich; Realtime-Echos der eigenen
 // Speicherungen überschreiben ihn nicht.
 // `initial` ist null, solange die Daten vom Server noch nicht geladen sind.
-export function useAvailabilityDraft(roundId: string, clientId: string, initial: DayMap | null) {
+export function useAvailabilityDraft(roundId: string, userId: string, initial: DayMap | null) {
   const [days, setDays] = useState<DayMap>({})
   const [ready, setReady] = useState(false)
   const [status, setStatus] = useState<SaveStatus>('idle')
@@ -38,8 +38,8 @@ export function useAvailabilityDraft(roundId: string, clientId: string, initial:
       const { error } = await getSupabase()
         .from('availability')
         .upsert(
-          { round_id: roundId, client_id: clientId, days: daysRef.current, updated_at: new Date().toISOString() },
-          { onConflict: 'round_id,client_id' },
+          { round_id: roundId, user_id: userId, days: daysRef.current, updated_at: new Date().toISOString() },
+          { onConflict: 'round_id,user_id' },
         )
       savingRef.current = false
       if (error) {
@@ -51,7 +51,7 @@ export function useAvailabilityDraft(roundId: string, clientId: string, initial:
         setStatus('saved')
       }
     }
-  }, [roundId, clientId])
+  }, [roundId, userId])
 
   const update = useCallback((changes: Record<string, DayStatus | null>) => {
     const next = { ...daysRef.current }
