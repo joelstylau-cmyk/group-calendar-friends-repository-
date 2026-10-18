@@ -15,3 +15,19 @@ export interface Member {
   color: string | null
   created_at: string
 }
+
+export type RoundStatus = 'open' | 'decided' | 'archived'
+
+export interface Round {
+  id: string
+  group_slug: string
+  title: string
+  start_date: string // YYYY-MM-DD
+  end_date: string // YYYY-MM-DD
+  excluded_dates: string[]
+  headcount: number | null
+  status: RoundStatus
+  decided_dates: string[] | null
+  created_by: string | null
+  created_at: string
+}
