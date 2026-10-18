@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { useAvailabilityDraft } from '../hooks/useAvailabilityDraft'
 import { useLiveRows } from '../hooks/useLiveRows'
 import { dayCount, daysInRange, formatRange } from '../lib/dates'
-import { bestOverall, classifyBlock, rankByLength } from '../lib/ranking'
+import { classifyBlock, rankInRange } from '../lib/ranking'
 import { getSupabase } from '../lib/supabase'
 import type { Availability, DayMap, Member, Round } from '../lib/types'
 import AvailabilitySection from './AvailabilitySection'
@@ -38,9 +38,8 @@ export default function RoundView({ round, members, clientId, onDeleted }: Props
 
   const answered = new Set(people.filter((p) => openDays.some((d) => entries.get(p)?.[d])))
   const dayStats = Object.fromEntries(openDays.map((d) => [d, classifyBlock([d], people, entries)]))
-  const byLength = rankByLength(windowDays, excluded, lengthRange.min, lengthRange.max, people, entries)
-  const best = bestOverall(byLength)
-  const highlight = new Set(best?.days ?? [])
+  const ranking = rankInRange(windowDays, excluded, lengthRange.min, lengthRange.max, people, entries)
+  const highlight = new Set(ranking.blocks[0]?.days ?? [])
 
   const creator = membersById.get(round.created_by ?? '')
   const isCreator = round.created_by === clientId
@@ -76,8 +75,7 @@ export default function RoundView({ round, members, clientId, onDeleted }: Props
             range={lengthRange}
             maxLength={windowDays.length}
             onRange={setLengthRange}
-            results={byLength}
-            best={best}
+            ranking={ranking}
             total={people.length}
             onOpen={setSheetDays}
           />

@@ -28,22 +28,25 @@ export interface StrictBlock {
   yes: string[]
 }
 
-export interface LengthResult {
-  length: number
-  blocks: StrictBlock[] // beste zuerst, leer = kein passender Block
+export interface RangeRanking {
+  blocks: StrictBlock[] // beste zuerst
+  emptyLengths: number[] // Längen der Spanne, für die kein Block passt
 }
 
+// Alle zusammenhängenden Blöcke mit minLength bis maxLength Tagen, an denen mindestens
+// eine Person durchgehend kann. Sortierung: mehr Personen zuerst, bei Gleichstand der
+// längere Block, dann der frühere.
 // windowDays: alle Tage des Fensters in Reihenfolge, also lückenlos aufeinanderfolgend.
 // Gesperrte Tage unterbrechen jeden Block.
-export function rankByLength(
+export function rankInRange(
   windowDays: string[],
   excluded: Set<string>,
   minLength: number,
   maxLength: number,
   people: string[],
   entries: Map<string, DayMap>,
-  perLength = 3,
-): LengthResult[] {
+  limit = 8,
+): RangeRanking {
   const n = windowDays.length
   // runs[k][i] = wie viele Tage Person k ab Tag i ununterbrochen "kann".
   // Damit kostet jeder Block nur einen Vergleich pro Person, auch bei langen Fenstern.
@@ -57,30 +60,23 @@ export function rankByLength(
     return run
   })
 
-  const results: LengthResult[] = []
+  const candidates: { start: number; length: number; yes: string[] }[] = []
+  const emptyLengths: number[] = []
   for (let length = minLength; length <= Math.min(maxLength, n); length++) {
-    const blocks: StrictBlock[] = []
+    let found = false
     for (let i = 0; i + length <= n; i++) {
       const yes = people.filter((_, k) => runs[k][i] >= length)
-      if (yes.length > 0) blocks.push({ days: windowDays.slice(i, i + length), yes })
+      if (yes.length > 0) {
+        candidates.push({ start: i, length, yes })
+        found = true
+      }
     }
-    // Mehr Leute zuerst; bei Gleichstand bleibt der frühere Termin vorn (stabile Sortierung).
-    blocks.sort((a, b) => b.yes.length - a.yes.length)
-    results.push({ length, blocks: blocks.slice(0, perLength) })
+    if (!found) emptyLengths.push(length)
   }
-  return results
-}
 
-// Bester Termin über alle Längen: die meisten Leute; bei Gleichstand der längere Block,
-// dann der frühere.
-export function bestOverall(results: LengthResult[]): StrictBlock | undefined {
-  let best: StrictBlock | undefined
-  for (const { blocks } of results) {
-    const top = blocks[0]
-    if (!top) continue
-    if (!best || top.yes.length > best.yes.length || (top.yes.length === best.yes.length && top.days.length > best.days.length)) {
-      best = top
-    }
-  }
-  return best
+  candidates.sort((a, b) => b.yes.length - a.yes.length || b.length - a.length || a.start - b.start)
+  const blocks = candidates
+    .slice(0, limit)
+    .map((c) => ({ days: windowDays.slice(c.start, c.start + c.length), yes: c.yes }))
+  return { blocks, emptyLengths }
 }
