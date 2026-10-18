@@ -35,7 +35,7 @@ export interface RangeRanking {
 
 // Alle zusammenhängenden Blöcke mit minLength bis maxLength Tagen, an denen mindestens
 // eine Person durchgehend kann. Sortierung: mehr Personen zuerst, bei Gleichstand der
-// längere Block, dann der frühere.
+// längere Block, dann der frühere. Teilblöcke besserer Blöcke fallen weg.
 // windowDays: alle Tage des Fensters in Reihenfolge, also lückenlos aufeinanderfolgend.
 // Gesperrte Tage unterbrechen jeden Block.
 export function rankInRange(
@@ -75,8 +75,17 @@ export function rankInRange(
   }
 
   candidates.sort((a, b) => b.yes.length - a.yes.length || b.length - a.length || a.start - b.start)
-  const blocks = candidates
-    .slice(0, limit)
-    .map((c) => ({ days: windowDays.slice(c.start, c.start + c.length), yes: c.yes }))
+
+  // Teilblöcke eines weiter oben stehenden Blocks ausblenden. Wer einen Block durchgehend
+  // kann, kann auch jedes Teilstück; ein Teilstück steht also nur dann tiefer, wenn es
+  // genau dieselben Leute hat, und bringt keine neue Information.
+  const kept: typeof candidates = []
+  for (const c of candidates) {
+    if (kept.length === limit) break
+    const contained = kept.some((k) => c.start >= k.start && c.start + c.length <= k.start + k.length)
+    if (!contained) kept.push(c)
+  }
+
+  const blocks = kept.map((c) => ({ days: windowDays.slice(c.start, c.start + c.length), yes: c.yes }))
   return { blocks, emptyLengths }
 }
