@@ -1,4 +1,5 @@
 import { dayOfMonth } from '../lib/dates'
+import { HATCH } from '../lib/status'
 import CalendarGrid from './CalendarGrid'
 
 interface Props {
@@ -8,8 +9,6 @@ interface Props {
   // Wenn gesetzt, lassen sich Tage im Fenster per Tippen sperren/entsperren.
   onToggle?: (iso: string) => void
 }
-
-const HATCH = 'repeating-linear-gradient(135deg, rgb(0 0 0 / 0.07) 0 4px, transparent 4px 8px)'
 
 const cellBase = 'flex aspect-square w-full items-center justify-center rounded-lg text-sm'
 

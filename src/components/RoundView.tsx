@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { dayCount, formatRange } from '../lib/dates'
 import { getSupabase } from '../lib/supabase'
 import type { Member, Round } from '../lib/types'
-import RoundCalendar from './RoundCalendar'
+import AvailabilitySection from './AvailabilitySection'
 
 interface Props {
   round: Round
@@ -30,7 +30,7 @@ export default function RoundView({ round, members, clientId, onDeleted }: Props
         </p>
       </header>
 
-      <RoundCalendar start={round.start_date} end={round.end_date} excluded={round.excluded_dates} />
+      <AvailabilitySection round={round} clientId={clientId} />
 
       {isCreator && <DeleteRound roundId={round.id} onDeleted={onDeleted} />}
     </article>

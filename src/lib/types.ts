@@ -16,6 +16,19 @@ export interface Member {
   created_at: string
 }
 
+export type DayStatus = 'yes' | 'maybe' | 'no'
+
+// {"2026-12-27": "yes"}; ein fehlender Tag heißt keine Antwort
+export type DayMap = Record<string, DayStatus>
+
+export interface Availability {
+  id: string
+  round_id: string
+  client_id: string
+  days: DayMap
+  updated_at: string
+}
+
 export type RoundStatus = 'open' | 'decided' | 'archived'
 
 export interface Round {
