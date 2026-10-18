@@ -1,6 +1,7 @@
 import { useRef, type PointerEvent } from 'react'
 import { dayOfMonth } from '../lib/dates'
-import { HATCH, STATUS_META } from '../lib/status'
+import type { BlockResult } from '../lib/ranking'
+import { DAY_STATUSES, HATCH, STATUS_META } from '../lib/status'
 import type { DayMap, DayStatus } from '../lib/types'
 import CalendarGrid from './CalendarGrid'
 
@@ -11,11 +12,16 @@ interface Props {
   end: string
   excluded: string[]
   myDays: DayMap
-  // Anzahl Personen pro Tag, die "kann" eingetragen haben (inkl. mir)
-  yesCounts: Record<string, number>
+  // Verteilung pro offenem Tag (inkl. mir)
+  dayStats: Record<string, BlockResult>
+  // Anzahl Personen, auf die sich die Balken beziehen
+  total: number
+  // Hervorgehobene Tage (aktuell bester Termin)
+  highlight: Set<string>
   editing: boolean
   brush: Brush
   onPaint: (changes: Record<string, DayStatus | null>) => void
+  onDayTap: (iso: string) => void
 }
 
 const cellBase = 'relative flex aspect-square w-full items-center justify-center rounded-lg border text-sm'
@@ -25,10 +31,13 @@ export default function AvailabilityCalendar({
   end,
   excluded,
   myDays,
-  yesCounts,
+  dayStats,
+  total,
+  highlight,
   editing,
   brush,
   onPaint,
+  onDayTap,
 }: Props) {
   const excludedSet = new Set(excluded)
   // Ein Strich (Tippen oder Ziehen) setzt alle berührten Tage auf denselben Wert.
@@ -100,28 +109,38 @@ export default function AvailabilityCalendar({
 
           const mine = myDays[iso]
           const meta = mine ? STATUS_META[mine] : null
-          const count = yesCounts[iso] ?? 0
-          const label = `${iso}: du ${meta ? meta.label : 'keine Angabe'}, ${count} ${count === 1 ? 'kann' : 'können'}`
-          const className = `${cellBase} font-medium ${meta ? meta.cell : 'border-gray-200 bg-white'} ${
-            editing ? 'cursor-pointer' : ''
-          }`
+          const stats = dayStats[iso]
+          const yes = stats?.yes.length ?? 0
+          const label =
+            `${iso}: ${yes} ${yes === 1 ? 'kann' : 'können'}, ${stats?.maybe.length ?? 0} vielleicht, ` +
+            `${stats?.no.length ?? 0} keine Zeit; du: ${meta ? meta.label : 'keine Angabe'}`
+          // Im Edit-Modus zeigt die Zellfarbe meinen Eintrag, sonst steht die Gruppe im Vordergrund.
+          const surface = editing && meta ? meta.cell : 'border-gray-200 bg-white'
+          const ring = !editing && highlight.has(iso) ? 'ring-2 ring-[#5b6cff] ring-offset-1' : ''
+          const className = `${cellBase} font-medium ${surface} ${ring} cursor-pointer`
+
           const content = (
             <>
-              {meta && <span className="absolute top-0.5 right-1 text-[10px] leading-none font-bold">{meta.glyph}</span>}
-              {day}
-              {count > 0 && (
-                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 text-[10px] leading-none font-semibold text-emerald-700">
-                  {count}
+              {yes > 0 && (
+                <span className="absolute top-0.5 left-1 text-[10px] leading-none font-semibold text-emerald-700">
+                  {yes}
                 </span>
               )}
+              {meta && (
+                <span className={`absolute top-0.5 right-1 text-[10px] leading-none font-bold ${meta.text}`}>
+                  {meta.glyph}
+                </span>
+              )}
+              <span className="-mt-1">{day}</span>
+              {stats && total > 0 && <DayBar stats={stats} total={total} />}
             </>
           )
 
           if (!editing) {
             return (
-              <span className={className} aria-label={label}>
+              <button type="button" onClick={() => onDayTap(iso)} aria-label={label} className={className}>
                 {content}
-              </span>
+              </button>
             )
           }
           return (
@@ -141,5 +160,19 @@ export default function AvailabilityCalendar({
         }}
       />
     </div>
+  )
+}
+
+// Gestapelter Mini-Balken: Anteil kann / vielleicht / keine Zeit, Rest grau = keine Antwort
+function DayBar({ stats, total }: { stats: BlockResult; total: number }) {
+  return (
+    <span className="absolute inset-x-1.5 bottom-1 flex h-1 overflow-hidden rounded-full bg-gray-200">
+      {DAY_STATUSES.map((s) => {
+        const n = stats[s].length
+        return n > 0 ? (
+          <span key={s} className={STATUS_META[s].swatch} style={{ width: `${(n / total) * 100}%` }} />
+        ) : null
+      })}
+    </span>
   )
 }

@@ -1,72 +1,60 @@
 import { useState } from 'react'
-import { useAvailabilityDraft, type SaveStatus } from '../hooks/useAvailabilityDraft'
-import { useLiveRows } from '../hooks/useLiveRows'
-import { dayCount, isInRange } from '../lib/dates'
+import type { SaveStatus } from '../hooks/useAvailabilityDraft'
+import type { BlockResult } from '../lib/ranking'
 import { DAY_STATUSES, HATCH, STATUS_META } from '../lib/status'
-import type { Availability, Round } from '../lib/types'
+import type { DayMap, DayStatus, Round } from '../lib/types'
 import AvailabilityCalendar, { type Brush } from './AvailabilityCalendar'
 
 interface Props {
   round: Round
-  clientId: string
+  openDays: string[]
+  myDays: DayMap
+  saveStatus: SaveStatus
+  onPaint: (changes: Record<string, DayStatus | null>) => void
+  onRetry: () => void
+  dayStats: Record<string, BlockResult>
+  total: number
+  highlight: Set<string>
+  onDayTap: (iso: string) => void
 }
 
-export default function AvailabilitySection({ round, clientId }: Props) {
-  const { rows, loaded, error } = useLiveRows<Availability>('availability', 'round_id', round.id, 'updated_at')
-  const myRow = rows.find((r) => r.client_id === clientId)
-  const draft = useAvailabilityDraft(round.id, clientId, loaded ? (myRow?.days ?? {}) : null)
+export default function AvailabilitySection({
+  round,
+  openDays,
+  myDays,
+  saveStatus,
+  onPaint,
+  onRetry,
+  dayStats,
+  total,
+  highlight,
+  onDayTap,
+}: Props) {
   const [editing, setEditing] = useState(false)
   const [brush, setBrush] = useState<Brush>('yes')
 
-  const excludedSet = new Set(round.excluded_dates)
-  const isOpenDay = (iso: string) => isInRange(iso, round.start_date, round.end_date) && !excludedSet.has(iso)
-
-  // "Kann"-Zähler pro Tag; mein Eintrag kommt aus dem lokalen Entwurf, damit er sofort stimmt.
-  const yesCounts: Record<string, number> = {}
-  const allDays = [...rows.filter((r) => r.client_id !== clientId).map((r) => r.days), draft.days]
-  for (const days of allDays) {
-    for (const [iso, value] of Object.entries(days)) {
-      if (value === 'yes' && isOpenDay(iso)) yesCounts[iso] = (yesCounts[iso] ?? 0) + 1
-    }
-  }
-
-  const openDays = dayCount(round.start_date, round.end_date) - round.excluded_dates.length
   const myCounts = { yes: 0, maybe: 0, no: 0 }
-  for (const [iso, value] of Object.entries(draft.days)) {
-    if (isOpenDay(iso)) myCounts[value]++
+  for (const iso of openDays) {
+    const value = myDays[iso]
+    if (value) myCounts[value]++
   }
   const answered = myCounts.yes + myCounts.maybe + myCounts.no
-  const respondents = new Set([
-    ...rows.filter((r) => Object.keys(r.days).some(isOpenDay)).map((r) => r.client_id),
-    ...(answered > 0 ? [clientId] : []),
-  ]).size
-
-  if (!loaded || !draft.ready) {
-    return <p className="text-gray-500">Lade Verfügbarkeiten…</p>
-  }
 
   return (
     <section className={`space-y-4 ${editing ? 'pb-44' : ''}`} aria-label="Verfügbarkeit">
-      {error && <p className="text-sm text-rose-700">Verfügbarkeiten laden fehlgeschlagen: {error}</p>}
-
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="text-sm">
-          <p>
-            Du: {answered} von {openDays} Tagen eingetragen
-            {answered > 0 && (
-              <span className="text-gray-500">
-                {' '}
-                ({DAY_STATUSES.filter((s) => myCounts[s] > 0)
-                  .map((s) => `${myCounts[s]} ${STATUS_META[s].glyph}`)
-                  .join(' · ')}
-                )
-              </span>
-            )}
-          </p>
-          <p className="text-gray-500">
-            {respondents} {respondents === 1 ? 'Person hat' : 'Personen haben'} eingetragen
-          </p>
-        </div>
+        <p className="text-sm">
+          Du: {answered} von {openDays.length} Tagen eingetragen
+          {answered > 0 && (
+            <span className="text-gray-500">
+              {' '}
+              ({DAY_STATUSES.filter((s) => myCounts[s] > 0)
+                .map((s) => `${myCounts[s]} ${STATUS_META[s].glyph}`)
+                .join(' · ')}
+              )
+            </span>
+          )}
+        </p>
         {!editing && (
           <button
             type="button"
@@ -76,35 +64,37 @@ export default function AvailabilitySection({ round, clientId }: Props) {
             {answered > 0 ? 'Meine Tage bearbeiten' : 'Meine Tage eintragen'}
           </button>
         )}
-        <SaveIndicator status={draft.status} onRetry={draft.retry} />
+        <SaveIndicator status={saveStatus} onRetry={onRetry} />
       </div>
 
-      {editing && (
-        <p className="text-sm text-gray-600">
-          Pinsel wählen, dann Tage antippen oder mit dem Finger drüberziehen. Ein Tag mit demselben Wert wird beim
-          Antippen wieder geleert.
-        </p>
-      )}
+      <p className="text-sm text-gray-600">
+        {editing
+          ? 'Pinsel wählen, dann Tage antippen oder mit dem Finger drüberziehen. Ein Tag mit demselben Wert wird beim Antippen wieder geleert.'
+          : 'Tipp einen Tag an, um zu sehen, wer kann.'}
+      </p>
 
       <AvailabilityCalendar
         start={round.start_date}
         end={round.end_date}
         excluded={round.excluded_dates}
-        myDays={draft.days}
-        yesCounts={yesCounts}
+        myDays={myDays}
+        dayStats={dayStats}
+        total={total}
+        highlight={highlight}
         editing={editing}
         brush={brush}
-        onPaint={draft.update}
+        onPaint={onPaint}
+        onDayTap={onDayTap}
       />
 
-      <Legend />
+      <Legend editing={editing} />
 
       {editing && (
         <BrushBar
           brush={brush}
           onBrush={setBrush}
-          status={draft.status}
-          onRetry={draft.retry}
+          status={saveStatus}
+          onRetry={onRetry}
           onDone={() => setEditing(false)}
         />
       )}
@@ -185,20 +175,32 @@ function BrushBar({ brush, onBrush, status, onRetry, onDone }: BrushBarProps) {
   )
 }
 
-function Legend() {
+function Legend({ editing }: { editing: boolean }) {
   return (
     <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600">
-      {DAY_STATUSES.map((s) => (
-        <li key={s} className="flex items-center gap-1.5">
-          <span className={`inline-flex h-4 w-4 items-center justify-center rounded border text-[10px] font-bold ${STATUS_META[s].cell}`}>
-            {STATUS_META[s].glyph}
-          </span>
-          du: {STATUS_META[s].label}
-        </li>
-      ))}
+      <li className="flex items-center gap-1.5">
+        <span className="flex h-1.5 w-8 overflow-hidden rounded-full bg-gray-200">
+          <span className={`w-1/2 ${STATUS_META.yes.swatch}`} />
+          <span className={`w-1/4 ${STATUS_META.maybe.swatch}`} />
+          <span className={`w-1/8 ${STATUS_META.no.swatch}`} />
+        </span>
+        Balken: kann / vielleicht / keine Zeit / grau = offen
+      </li>
       <li className="flex items-center gap-1.5">
         <span className="text-[11px] font-semibold text-emerald-700">3</span> so viele können
       </li>
+      <li className="flex items-center gap-1.5">
+        <span className="text-[11px] font-bold">
+          <span className={STATUS_META.yes.text}>✓</span> <span className={STATUS_META.maybe.text}>~</span>{' '}
+          <span className={STATUS_META.no.text}>✗</span>
+        </span>
+        dein Eintrag
+      </li>
+      {!editing && (
+        <li className="flex items-center gap-1.5">
+          <span className="inline-block h-3.5 w-3.5 rounded ring-2 ring-[#5b6cff]" /> bester Termin
+        </li>
+      )}
       <li className="flex items-center gap-1.5">
         <span className="inline-block h-4 w-4 rounded bg-gray-100" style={{ backgroundImage: HATCH }} /> gesperrt
       </li>

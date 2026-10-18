@@ -30,6 +30,17 @@ export function dayCount(start: string, end: string): number {
   return Math.round((utcB - utcA) / 86_400_000) + 1
 }
 
+// Alle Tage von start bis end (inklusive)
+export function daysInRange(start: string, end: string): string[] {
+  const days: string[] = []
+  const cursor = parseISODate(start)
+  for (let iso = start; iso <= end; iso = toISODate(cursor)) {
+    days.push(iso)
+    cursor.setDate(cursor.getDate() + 1)
+  }
+  return days
+}
+
 export function isInRange(iso: string, start: string, end: string): boolean {
   return iso >= start && iso <= end
 }
@@ -73,6 +84,15 @@ export function formatMonth(year: number, month: number): string {
 
 export function formatRange(start: string, end: string): string {
   return rangeFormat.formatRange(parseISODate(start), parseISODate(end))
+}
+
+const dayFormat = new Intl.DateTimeFormat('de-DE', { weekday: 'short', day: 'numeric', month: 'short' })
+
+// "Sa., 27. Dez." bzw. "Sa., 27. – Mo., 29. Dez." für Blöcke
+export function formatDays(days: string[]): string {
+  const first = parseISODate(days[0])
+  if (days.length === 1) return dayFormat.format(first)
+  return dayFormat.formatRange(first, parseISODate(days[days.length - 1]))
 }
 
 export function dayOfMonth(iso: string): number {

@@ -1,7 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import JoinForm from '../components/JoinForm'
-import MemberBar from '../components/MemberBar'
 import RoundsSection from '../components/RoundsSection'
 import ShareButton from '../components/ShareButton'
 import { useMembers } from '../hooks/useMembers'
@@ -83,10 +82,7 @@ function GroupView({ group }: { group: GroupRow }) {
       {!loaded ? (
         <p className="text-gray-500">Lade Mitglieder…</p>
       ) : isMember ? (
-        <>
-          <MemberBar members={members} clientId={clientId} />
-          <RoundsSection groupSlug={group.slug} members={members} clientId={clientId} />
-        </>
+        <RoundsSection groupSlug={group.slug} members={members} clientId={clientId} />
       ) : (
         <JoinForm
           groupSlug={group.slug}

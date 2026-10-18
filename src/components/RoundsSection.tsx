@@ -4,6 +4,7 @@ import { useRounds } from '../hooks/useRounds'
 import { formatRange } from '../lib/dates'
 import type { Member, Round } from '../lib/types'
 import CreateRoundForm from './CreateRoundForm'
+import MemberBar from './MemberBar'
 import RoundView from './RoundView'
 
 interface Props {
@@ -63,9 +64,12 @@ export default function RoundsSection({ groupSlug, members, clientId }: Props) {
       {!loaded ? (
         <p className="text-gray-500">Lade Runden…</p>
       ) : !selected ? (
-        <div className="rounded-2xl border border-dashed border-gray-300 p-6 text-center text-gray-600">
-          Noch keine Runde. Leg die erste an, z.B. für den nächsten Ausflug.
-        </div>
+        <>
+          <MemberBar members={members} clientId={clientId} />
+          <div className="rounded-2xl border border-dashed border-gray-300 p-6 text-center text-gray-600">
+            Noch keine Runde. Leg die erste an, z.B. für den nächsten Ausflug.
+          </div>
+        </>
       ) : (
         <>
           {rounds.length > 1 && (

@@ -1,25 +1,48 @@
 import type { Member } from '../lib/types'
 import Avatar from './Avatar'
 
-export default function MemberBar({ members, clientId }: { members: Member[]; clientId: string }) {
+interface Props {
+  members: Member[]
+  clientId: string
+  // Wenn gesetzt: zeigt pro Person, ob sie in der aktuellen Runde geantwortet hat.
+  answered?: Set<string>
+  target?: number
+}
+
+export default function MemberBar({ members, clientId, answered, target }: Props) {
+  const answeredCount = answered ? members.filter((m) => answered.has(m.client_id)).length : 0
+
   return (
     <section aria-label="Mitglieder">
       <h2 className="mb-2 text-sm font-medium text-gray-500">
-        Mitglieder ({members.length})
+        {answered
+          ? `${answeredCount} von ${target ?? members.length} haben geantwortet`
+          : `Mitglieder (${members.length})`}
       </h2>
       {members.length === 0 ? (
         <p className="text-sm text-gray-500">Noch niemand da.</p>
       ) : (
-        <ul className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2">
-          {members.map((m) => (
-            <li key={m.id} className="flex w-16 shrink-0 flex-col items-center gap-1 text-center">
-              <Avatar member={m} size={44} />
-              <span className="w-full truncate text-xs">
-                {m.name}
-                {m.client_id === clientId && <span className="text-gray-500"> (du)</span>}
-              </span>
-            </li>
-          ))}
+        <ul className="-mx-4 flex gap-4 overflow-x-auto px-4 pt-1 pb-2">
+          {members.map((m) => {
+            const hasAnswered = answered?.has(m.client_id) ?? true
+            return (
+              <li key={m.id} className="flex w-16 shrink-0 flex-col items-center gap-1 text-center">
+                <span className={`relative ${hasAnswered ? '' : 'opacity-40'}`}>
+                  <Avatar member={m} size={44} />
+                  {answered && hasAnswered && (
+                    <span className="absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-emerald-500 text-[10px] font-bold text-white">
+                      ✓
+                    </span>
+                  )}
+                </span>
+                <span className="w-full truncate text-xs">
+                  {m.name}
+                  {m.client_id === clientId && <span className="text-gray-500"> (du)</span>}
+                </span>
+                {answered && !hasAnswered && <span className="sr-only">hat noch nicht geantwortet</span>}
+              </li>
+            )
+          })}
         </ul>
       )}
     </section>
