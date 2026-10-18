@@ -2,12 +2,12 @@ import { useCallback, useMemo, useState } from 'react'
 import { useAvailabilityDraft } from '../hooks/useAvailabilityDraft'
 import { useLiveRows } from '../hooks/useLiveRows'
 import { dayCount, daysInRange, formatRange } from '../lib/dates'
-import { classifyBlock, rankBlocks } from '../lib/ranking'
+import { bestOverall, classifyBlock, rankByLength } from '../lib/ranking'
 import { getSupabase } from '../lib/supabase'
 import type { Availability, DayMap, Member, Round } from '../lib/types'
 import AvailabilitySection from './AvailabilitySection'
 import BlockSheet from './BlockSheet'
-import Dashboard, { type BlockLength } from './Dashboard'
+import Dashboard, { type LengthRange } from './Dashboard'
 import MemberBar from './MemberBar'
 
 interface Props {
@@ -21,11 +21,11 @@ export default function RoundView({ round, members, clientId, onDeleted }: Props
   const { rows, loaded, error } = useLiveRows<Availability>('availability', 'round_id', round.id, 'updated_at')
   const myRow = rows.find((r) => r.client_id === clientId)
   const draft = useAvailabilityDraft(round.id, clientId, loaded ? (myRow?.days ?? {}) : null)
-  const [blockLength, setBlockLength] = useState<BlockLength>(1)
   const [sheetDays, setSheetDays] = useState<string[] | null>(null)
   const closeSheet = useCallback(() => setSheetDays(null), [])
 
   const windowDays = useMemo(() => daysInRange(round.start_date, round.end_date), [round.start_date, round.end_date])
+  const [lengthRange, setLengthRange] = useState<LengthRange>(() => ({ min: 1, max: Math.min(3, windowDays.length) }))
   const excluded = useMemo(() => new Set(round.excluded_dates), [round.excluded_dates])
   const openDays = windowDays.filter((d) => !excluded.has(d))
 
@@ -38,8 +38,9 @@ export default function RoundView({ round, members, clientId, onDeleted }: Props
 
   const answered = new Set(people.filter((p) => openDays.some((d) => entries.get(p)?.[d])))
   const dayStats = Object.fromEntries(openDays.map((d) => [d, classifyBlock([d], people, entries)]))
-  const ranked = rankBlocks(windowDays, excluded, blockLength, people, entries)
-  const highlight = new Set(ranked[0]?.days ?? [])
+  const byLength = rankByLength(windowDays, excluded, lengthRange.min, lengthRange.max, people, entries)
+  const best = bestOverall(byLength)
+  const highlight = new Set(best?.days ?? [])
 
   const creator = membersById.get(round.created_by ?? '')
   const isCreator = round.created_by === clientId
@@ -72,9 +73,11 @@ export default function RoundView({ round, members, clientId, onDeleted }: Props
       ) : (
         <>
           <Dashboard
-            length={blockLength}
-            onLength={setBlockLength}
-            ranked={ranked}
+            range={lengthRange}
+            maxLength={windowDays.length}
+            onRange={setLengthRange}
+            results={byLength}
+            best={best}
             total={people.length}
             onOpen={setSheetDays}
           />

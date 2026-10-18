@@ -1,7 +1,6 @@
 import type { DayMap, DayStatus } from './types'
 
-// Wer kann an einem Tag bzw. Block aus aufeinanderfolgenden Tagen?
-// Echte Schnittmenge: "yes" nur, wer an ALLEN Tagen des Blocks yes hat.
+// Wer kann an einem Tag bzw. Block aus aufeinanderfolgenden Tagen? (für die Detail-Ansicht)
 export interface BlockResult {
   days: string[]
   yes: string[] // an allen Tagen yes
@@ -23,29 +22,65 @@ export function classifyBlock(days: string[], people: string[], entries: Map<str
   return result
 }
 
-// Mehr sichere Zusagen zuerst, dann mehr Vielleichts, dann weniger Absagen.
-// Bei Gleichstand bleibt die zeitliche Reihenfolge (stabile Sortierung).
-function compareBlocks(a: BlockResult, b: BlockResult): number {
-  return b.yes.length - a.yes.length || b.maybe.length - a.maybe.length || a.no.length - b.no.length
+// Strikte Schnittmenge fürs Ranking: nur wer an ALLEN Tagen des Blocks "kann" hat.
+export interface StrictBlock {
+  days: string[]
+  yes: string[]
+}
+
+export interface LengthResult {
+  length: number
+  blocks: StrictBlock[] // beste zuerst, leer = kein passender Block
 }
 
 // windowDays: alle Tage des Fensters in Reihenfolge, also lückenlos aufeinanderfolgend.
-// Blöcke, die einen gesperrten Tag enthalten, fallen weg.
-export function rankBlocks(
+// Gesperrte Tage unterbrechen jeden Block.
+export function rankByLength(
   windowDays: string[],
   excluded: Set<string>,
-  length: number,
+  minLength: number,
+  maxLength: number,
   people: string[],
   entries: Map<string, DayMap>,
-  limit = 5,
-): BlockResult[] {
-  const results: BlockResult[] = []
-  for (let i = 0; i + length <= windowDays.length; i++) {
-    const days = windowDays.slice(i, i + length)
-    if (days.some((d) => excluded.has(d))) continue
-    const result = classifyBlock(days, people, entries)
-    if (result.yes.length + result.maybe.length === 0) continue
-    results.push(result)
+  perLength = 3,
+): LengthResult[] {
+  const n = windowDays.length
+  // runs[k][i] = wie viele Tage Person k ab Tag i ununterbrochen "kann".
+  // Damit kostet jeder Block nur einen Vergleich pro Person, auch bei langen Fenstern.
+  const runs = people.map((person) => {
+    const map = entries.get(person) ?? {}
+    const run = new Array<number>(n + 1).fill(0)
+    for (let i = n - 1; i >= 0; i--) {
+      const day = windowDays[i]
+      run[i] = !excluded.has(day) && map[day] === 'yes' ? run[i + 1] + 1 : 0
+    }
+    return run
+  })
+
+  const results: LengthResult[] = []
+  for (let length = minLength; length <= Math.min(maxLength, n); length++) {
+    const blocks: StrictBlock[] = []
+    for (let i = 0; i + length <= n; i++) {
+      const yes = people.filter((_, k) => runs[k][i] >= length)
+      if (yes.length > 0) blocks.push({ days: windowDays.slice(i, i + length), yes })
+    }
+    // Mehr Leute zuerst; bei Gleichstand bleibt der frühere Termin vorn (stabile Sortierung).
+    blocks.sort((a, b) => b.yes.length - a.yes.length)
+    results.push({ length, blocks: blocks.slice(0, perLength) })
   }
-  return results.sort(compareBlocks).slice(0, limit)
+  return results
+}
+
+// Bester Termin über alle Längen: die meisten Leute; bei Gleichstand der längere Block,
+// dann der frühere.
+export function bestOverall(results: LengthResult[]): StrictBlock | undefined {
+  let best: StrictBlock | undefined
+  for (const { blocks } of results) {
+    const top = blocks[0]
+    if (!top) continue
+    if (!best || top.yes.length > best.yes.length || (top.yes.length === best.yes.length && top.days.length > best.days.length)) {
+      best = top
+    }
+  }
+  return best
 }
