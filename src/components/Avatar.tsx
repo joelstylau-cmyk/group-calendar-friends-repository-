@@ -1,7 +1,10 @@
 import type { Member } from '../lib/types'
 import { colorForId } from '../lib/colors'
 
-export default function Avatar({ member, size = 40 }: { member: Member; size?: number }) {
+type AvatarPerson = Pick<Member, 'user_id' | 'name' | 'emoji' | 'color'>
+
+export default function Avatar({ member, size = 40 }: { member: AvatarPerson; size?: number }) {
+  // Keine Farbe gewählt = automatisch aus der User-ID
   const color = member.color ?? colorForId(member.user_id)
   return (
     <span

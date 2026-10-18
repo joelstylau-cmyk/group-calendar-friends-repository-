@@ -1,6 +1,6 @@
 // Avatar-Farben für Mitglieder. Stabil pro User-ID, damit jede Person
 // auf allen Geräten dieselbe Farbe hat.
-const MEMBER_COLORS = [
+export const MEMBER_COLORS = [
   '#5b6cff', // periwinkle
   '#e8590c', // orange
   '#0ca678', // teal

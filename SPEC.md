@@ -18,16 +18,18 @@ Mobile-first Web-App, mit der Freundesgruppen pro Event einen Termin finden. Log
 - Identität = Supabase-User-ID (`auth.users.id`) des eingeloggten Google-Kontos. Dieselbe Person ist auf allen Geräten dieselbe Identität.
 - Ohne Login ist nichts erreichbar außer dem Login-Screen ("Mit Google anmelden"). Nach dem Login landet man wieder auf der Seite, von der man kam (OAuth `redirectTo` = aktuelle URL).
 - Gruppe = Zeile in `groups` mit unratbarem `slug` (nanoid, 12 Zeichen). URL-Form: `/g/<slug>`. Wer eingeloggt ist und den Link hat, kann beitreten.
-- Beitreten: einmal pro Gruppe Name (vorausgefüllt mit dem Google-Namen) und optional Emoji, Zeile in `members`.
+- Profil global: Name, Emoji und Farbe einmal pro Nutzer in `profiles`, gelten in allen Gruppen gleich. Beim ersten Login legt ein Datenbank-Trigger das Profil an, Name aus dem Google-Konto. Änderbar unter Settings (`/settings`, oben rechts).
+- Beitreten: ein Klick, Zeile in `members` (ohne eigene Namensangabe, es gilt das Profil).
 - Passwort pro Gruppe: Feld `password_hash` vorsehen, Logik erst später.
 - Historie: Bis Etappe 1 des Identitäts-Umbaus war die Identität eine zufällige `clientId` in localStorage (kein Login). Diese Logik ist vollständig entfernt.
 
 ## Security
 
-- Row Level Security ist aktiv und echt; Schema und Policies stehen in `supabase/schema.sql`.
+- Row Level Security ist aktiv und echt; Schema und Policies stehen in `supabase/migrations/` (in Reihenfolge ausführen; `001_schema.sql` setzt alles zurück).
   - `anon` (nicht eingeloggt) darf nichts.
+  - `profiles`: sehen das eigene Profil und Profile von Leuten aus gemeinsamen Gruppen. Ändern nur das eigene, nur `name`, `emoji`, `color`. Anlegen nur per Trigger.
   - `groups`: lesen nur Mitglieder und Ersteller; Lookup per Link über die Funktion `get_group(slug)` (gibt nur Slug und Name preis). Anlegen darf jeder Eingeloggte.
-  - `members`: Mitglieder sehen einander. Beitreten nur als man selbst und nur mit Rolle `member`. Ändern nur eigene Zeile und nur `name`, `emoji`, `color`. Austreten selbst oder durch Admin.
+  - `members`: Mitglieder sehen einander. Beitreten nur als man selbst und nur mit Rolle `member`. Keine Änderungen per Client. Austreten selbst oder durch Admin.
   - `rounds`: Mitglieder sehen und legen an. Ändern und Löschen: Ersteller ODER Admin.
   - `availability`: Mitglieder der Runde sehen alles, schreiben nur die eigene Zeile.
 - Admin: Rolle `members.role = 'admin'`, ausgewertet ausschließlich in der Funktion `is_group_admin(group_slug)`. Ändert sich später, was Admin bedeutet, wird nur diese Funktion angepasst, die Policies bleiben. Aktuell gibt es keinen Weg, Admin zu werden.
@@ -35,9 +37,18 @@ Mobile-first Web-App, mit der Freundesgruppen pro Event einen Termin finden. Log
 
 ## Datenmodell (Supabase)
 
-Vollständig mit Funktionen, Rechten und Policies in `supabase/schema.sql`. Kurzfassung:
+Vollständig mit Funktionen, Rechten und Policies in `supabase/migrations/`. Kurzfassung (Stand nach 002):
 
 ```sql
+create table profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  name text not null,                  -- 1 bis 30 Zeichen
+  emoji text,
+  color text,                          -- null = automatisch aus der User-ID
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
 create table groups (
   slug text primary key,
   name text not null,
@@ -49,10 +60,7 @@ create table groups (
 create table members (
   id uuid primary key default gen_random_uuid(),
   group_slug text not null references groups(slug) on delete cascade,
-  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
-  name text not null,
-  emoji text,
-  color text,
+  user_id uuid not null default auth.uid() references profiles(id) on delete cascade,
   role text not null default 'member',   -- 'member' | 'admin'
   created_at timestamptz default now(),
   unique (group_slug, user_id)
@@ -83,7 +91,7 @@ create table availability (
 ```
 
 - Status-Werte: `yes` | `maybe` | `no`. Ein fehlender Tag heißt keine Antwort.
-- `availability.user_id` matcht `members.user_id` (Join-Key, so kommt der Name an die Verfügbarkeit).
+- `availability.user_id` matcht `members.user_id` und `profiles.id` (Join-Key, so kommt der Name an die Verfügbarkeit). Mitglieder werden mit eingebettetem Profil geladen; Profiländerungen lösen per Realtime ein Neuladen aus.
 - Realtime: Client abonniert `members`, `rounds` und `availability` gefiltert auf die aktuelle Gruppe/Runde über Supabase Realtime (postgres_changes). DELETE-Events lassen sich nicht filtern, daher ein zusätzliches ungefiltertes DELETE-Abo, das nur auf bekannte IDs reagiert.
 
 ## Build-Reihenfolge (Milestones)
@@ -128,7 +136,8 @@ create table availability (
 
 ### Identitäts-Umbau (in Etappen)
 - Etappe 1 (erledigt): Login-Unterbau. Google-Login über Supabase Auth, Identität = Auth-User-ID, Login-Screen vor allem anderen, Rückkehr zur Ausgangsseite, echte RLS (siehe Security).
-- Spätere Etappen: Profil-Seite, Settings, Gruppen-Übersicht, Admin.
+- Etappe 2 (erledigt): globales Profil (`profiles`), Settings mit Name, Emoji, Farbe (oder automatisch), Abmelden.
+- Spätere Etappen: Gruppen-Übersicht, Gruppe verlassen, Beitritts-Code, Admin.
 
 ### Offen (gewünscht, Zeitpunkt entscheidet der User)
 - Runden nachträglich bearbeiten (Titel, Fenster, gesperrte Tage). RLS dafür steht bereits (`rounds_update`: Ersteller oder Admin).
@@ -138,7 +147,8 @@ create table availability (
 - Mobile-first, sauber, bewusst nicht wie when2meet.
 - Akzent Periwinkle (#5b6cff), Zustandsfarben grün / amber / rose, jeweils mit Glyph (✓ ~ ✗), nie nur über Farbe.
 - Fonts: Bricolage Grotesque (Display) und Hanken Grotesque (Body) via Google Fonts.
-- Hell/Dunkel automatisch plus Toggle, Safe-Area auf Mobile beachten.
+- Hell/Dunkel automatisch plus Toggle (Hell / Dunkel / Automatisch in den Settings, pro Person im Profil gespeichert): bewusst erst nach dem Design-Feinschliff, damit er nicht auf einem UI entsteht, das noch umgeworfen wird.
+- Safe-Area auf Mobile beachten.
 - Eine mutige Stelle (der Kalender), der Rest ruhig.
 
 ## Explizit NICHT jetzt

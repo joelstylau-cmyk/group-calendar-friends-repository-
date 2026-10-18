@@ -1,14 +1,25 @@
-import { displayNameOf, signOut, useUser } from '../lib/auth'
+import { Link, useLocation } from 'react-router-dom'
+import { useUser } from '../lib/auth'
+import { useProfile } from '../lib/profile'
+import Avatar from './Avatar'
 
-// Schmale Leiste: wer ist angemeldet, plus Abmelden (zum Testen mit mehreren Konten).
+// Oben rechts: eigenes Profil, führt zu den Settings.
 export default function AccountBar() {
   const user = useUser()
+  const { profile } = useProfile()
+  const { pathname } = useLocation()
+  if (pathname === '/settings') return null
+
   return (
-    <div className="mx-auto flex max-w-md items-center justify-end gap-3 px-4 pt-3 text-xs text-gray-500">
-      <span className="truncate">{user.email ?? displayNameOf(user)}</span>
-      <button type="button" onClick={() => void signOut()} className="shrink-0 underline">
-        Abmelden
-      </button>
+    <div className="mx-auto flex max-w-md justify-end px-4 pt-3">
+      <Link
+        to="/settings"
+        aria-label="Einstellungen"
+        className="flex items-center gap-2 rounded-full py-1 pr-3 pl-1 text-sm text-gray-700 hover:bg-gray-100"
+      >
+        <Avatar member={{ user_id: user.id, ...profile }} size={28} />
+        <span className="max-w-40 truncate">{profile.name}</span>
+      </Link>
     </div>
   )
 }

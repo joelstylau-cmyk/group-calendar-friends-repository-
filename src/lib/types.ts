@@ -6,13 +6,18 @@ export interface Group {
   created_at: string
 }
 
-export interface Member {
+// Globales Profil, eine Zeile pro Nutzer (id = Supabase-Auth-User-ID)
+export interface Profile {
+  name: string
+  emoji: string | null
+  color: string | null // null = automatisch
+}
+
+// Mitgliedschaft; name/emoji/color kommen aus dem Profil (von useMembers eingeblendet).
+export interface Member extends Profile {
   id: string
   group_slug: string
   user_id: string // Supabase-Auth-User-ID
-  name: string
-  emoji: string | null
-  color: string | null
   role: 'member' | 'admin'
   created_at: string
 }

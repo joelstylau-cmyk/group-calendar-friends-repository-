@@ -18,7 +18,9 @@ interface Props {
 }
 
 export default function RoundView({ round, members, userId, onDeleted }: Props) {
-  const { rows, loaded, error } = useLiveRows<Availability>('availability', 'round_id', round.id, 'updated_at')
+  const { rows, loaded, error } = useLiveRows<Availability>('availability', 'round_id', round.id, {
+    orderBy: 'updated_at',
+  })
   const myRow = rows.find((r) => r.user_id === userId)
   const draft = useAvailabilityDraft(round.id, userId, loaded ? (myRow?.days ?? {}) : null)
   const [sheetDays, setSheetDays] = useState<string[] | null>(null)

@@ -10,7 +10,7 @@ cp .env.example .env   # dann VITE_SUPABASE_URL und VITE_SUPABASE_ANON_KEY eintr
 npm run dev
 ```
 
-Datenbank: `supabase/schema.sql` im Supabase SQL-Editor ausführen (setzt alles zurück).
+Datenbank: die Dateien in `supabase/migrations/` der Reihe nach im Supabase SQL-Editor ausführen (`001_schema.sql` setzt alles zurück).
 
 ## Hinweise
 
