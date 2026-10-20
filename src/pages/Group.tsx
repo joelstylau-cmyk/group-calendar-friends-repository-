@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import JoinCodeCard from '../components/JoinCodeCard'
 import JoinForm from '../components/JoinForm'
 import RoundsSection from '../components/RoundsSection'
 import ShareButton from '../components/ShareButton'
@@ -85,6 +86,7 @@ function GroupView({ group }: { group: GroupRow }) {
         <p className="text-gray-500">Lade Mitglieder…</p>
       ) : isMember ? (
         <>
+          <JoinCodeCard groupSlug={group.slug} />
           <RoundsSection groupSlug={group.slug} members={members} userId={userId} />
           <LeaveGroup groupSlug={group.slug} groupName={group.name} />
         </>
@@ -128,7 +130,7 @@ function LeaveGroup({ groupSlug, groupName }: { groupSlug: string; groupName: st
     <div className="space-y-3 rounded-xl border border-rose-200 bg-rose-50 p-4">
       <p className="text-sm">
         „{groupName}“ wirklich verlassen? Deine Verfügbarkeiten in allen Runden dieser Gruppe werden gelöscht. Über
-        den Link kannst du später wieder beitreten.
+        den Link oder den Beitritts-Code kannst du später wieder beitreten.
       </p>
       {error && <p className="text-sm text-rose-700">{error}</p>}
       <div className="flex gap-3">

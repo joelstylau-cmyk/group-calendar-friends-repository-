@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import ConnectionStatus from '../components/ConnectionStatus'
 import { useMyGroups } from '../hooks/useMyGroups'
 import { useUser } from '../lib/auth'
+import { checkJoinCode, normalizeJoinCode } from '../lib/joinCode'
 import { createSlug } from '../lib/slug'
 import { getSupabase, UNIQUE_VIOLATION } from '../lib/supabase'
 
@@ -28,8 +29,8 @@ export default function Start() {
             <p className="text-3xl">👋</p>
             <p className="mt-2 font-medium text-gray-800">Du bist noch in keiner Gruppe</p>
             <p className="mt-1">
-              Leg unten eine neue Gruppe an und teil den Link. Oder lass dir den Link einer bestehenden Gruppe
-              schicken.
+              Leg unten eine neue Gruppe an und teil den Link. Oder lass dir den Link oder Beitritts-Code einer
+              bestehenden Gruppe schicken.
             </p>
           </div>
         ) : (
@@ -49,10 +50,75 @@ export default function Start() {
         )}
       </section>
 
+      <JoinByCodeForm />
+
       <CreateGroupForm />
 
       {import.meta.env.DEV && <ConnectionStatus />}
     </main>
+  )
+}
+
+function JoinByCodeForm() {
+  const navigate = useNavigate()
+  const [code, setCode] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    const normalized = normalizeJoinCode(code)
+    const problem = checkJoinCode(normalized)
+    if (problem) {
+      setError(problem)
+      return
+    }
+    setBusy(true)
+    setError(null)
+    // Tritt bei oder bleibt Mitglied, wenn man es schon ist (siehe 004_join_code.sql).
+    const { data, error } = await getSupabase().rpc('join_group_by_code', { p_code: normalized })
+    if (error) {
+      setError(`Beitreten hat nicht geklappt: ${error.message}`)
+      setBusy(false)
+      return
+    }
+    if (!data) {
+      setError('Zu diesem Code gibt es keine Gruppe. Frag nochmal nach.')
+      setBusy(false)
+      return
+    }
+    navigate(`/g/${data as string}`)
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <label className="block space-y-1">
+        <span className="text-sm font-medium">Mit Code beitreten</span>
+        <input
+          type="text"
+          value={code}
+          onChange={(e) => {
+            setCode(e.target.value.toUpperCase())
+            setError(null)
+          }}
+          placeholder="z.B. 7KAX-R3HT"
+          maxLength={12}
+          autoCapitalize="characters"
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-base tracking-widest outline-none focus:border-[#5b6cff] focus:ring-2 focus:ring-[#5b6cff]/30"
+        />
+      </label>
+      {error && <p className="text-sm text-rose-700">{error}</p>}
+      <button
+        type="submit"
+        disabled={busy || !code.trim()}
+        className="w-full rounded-lg border border-[#5b6cff] px-4 py-2.5 font-medium text-[#5b6cff] disabled:opacity-50"
+      >
+        {busy ? 'Trete bei…' : 'Beitreten'}
+      </button>
+    </form>
   )
 }
 

@@ -20,6 +20,7 @@ Mobile-first Web-App, mit der Freundesgruppen pro Event einen Termin finden. Log
 - Gruppe = Zeile in `groups` mit unratbarem `slug` (nanoid, 12 Zeichen). URL-Form: `/g/<slug>`. Wer eingeloggt ist und den Link hat, kann beitreten.
 - Profil global: Name, Emoji und Farbe einmal pro Nutzer in `profiles`, gelten in allen Gruppen gleich. Beim ersten Login legt ein Datenbank-Trigger das Profil an, Name aus dem Google-Konto. Änderbar unter Settings (`/settings`, oben rechts).
 - Beitreten: ein Klick, Zeile in `members` (ohne eigene Namensangabe, es gilt das Profil).
+- Beitritts-Code: jede Gruppe hat zusätzlich einen 8-stelligen Code (`groups.join_code`, Anzeige `XXXX-XXXX`), den Mitglieder in der Gruppenansicht sehen und kopieren. Alphabet `34679AFHKRTXY`: ohne optisch oder akustisch verwechselbare Zeichen (0/O, 1/I/L, B/8, S/5, Z/2, die "-e"-Reimgruppe B C D E G P W usw.), damit er sich zurufen und abtippen lässt. Eingabe auf der Startseite (Groß-/Kleinschreibung, Bindestriche und Leerzeichen egal) über `join_group_by_code(code)`. Wer schon Mitglied ist, landet einfach in der Gruppe, ohne Fehler und ohne doppeltes Mitglied.
 - Passwort pro Gruppe: Feld `password_hash` vorsehen, Logik erst später.
 - Historie: Bis Etappe 1 des Identitäts-Umbaus war die Identität eine zufällige `clientId` in localStorage (kein Login). Diese Logik ist vollständig entfernt.
 
@@ -28,8 +29,8 @@ Mobile-first Web-App, mit der Freundesgruppen pro Event einen Termin finden. Log
 - Row Level Security ist aktiv und echt; Schema und Policies stehen in `supabase/migrations/` (in Reihenfolge ausführen; `001_schema.sql` setzt alles zurück).
   - `anon` (nicht eingeloggt) darf nichts.
   - `profiles`: sehen das eigene Profil und Profile von Leuten aus gemeinsamen Gruppen. Ändern nur das eigene, nur `name`, `emoji`, `color`. Anlegen nur per Trigger.
-  - `groups`: lesen nur Mitglieder und Ersteller; Lookup per Link über die Funktion `get_group(slug)` (gibt nur Slug und Name preis). Anlegen darf jeder Eingeloggte.
-  - `members`: Mitglieder sehen einander. Beitreten nur als man selbst und nur mit Rolle `member`. Keine Änderungen per Client. Austreten selbst oder durch Admin.
+  - `groups`: lesen nur Mitglieder und Ersteller; Lookup per Link über die Funktion `get_group(slug)` (gibt nur Slug und Name preis, nicht den Code). Anlegen darf jeder Eingeloggte; den Beitritts-Code vergibt immer die Datenbank (Trigger).
+  - `members`: Mitglieder sehen einander. Beitreten nur als man selbst und nur mit Rolle `member` (auch `join_group_by_code` trägt nur den Aufrufer als `member` ein). Keine Änderungen per Client. Austreten selbst oder durch Admin.
   - `rounds`: Mitglieder sehen und legen an. Ändern und Löschen: Ersteller ODER Admin.
   - `availability`: Mitglieder der Runde sehen alles, schreiben nur die eigene Zeile.
 - Admin: Rolle `members.role = 'admin'`, ausgewertet ausschließlich in der Funktion `is_group_admin(group_slug)`. Ändert sich später, was Admin bedeutet, wird nur diese Funktion angepasst, die Policies bleiben. Aktuell gibt es keinen Weg, Admin zu werden.
@@ -37,7 +38,7 @@ Mobile-first Web-App, mit der Freundesgruppen pro Event einen Termin finden. Log
 
 ## Datenmodell (Supabase)
 
-Vollständig mit Funktionen, Rechten und Policies in `supabase/migrations/`. Kurzfassung (Stand nach 002):
+Vollständig mit Funktionen, Rechten und Policies in `supabase/migrations/`. Kurzfassung (Stand nach 004):
 
 ```sql
 create table profiles (
@@ -53,6 +54,7 @@ create table groups (
   slug text primary key,
   name text not null,
   password_hash text,
+  join_code text not null unique,      -- 8 Zeichen aus 34679AFHKRTXY, per Trigger vergeben
   created_by uuid default auth.uid() references auth.users(id) on delete set null,
   created_at timestamptz default now()
 );
@@ -138,7 +140,8 @@ create table availability (
 - Etappe 1 (erledigt): Login-Unterbau. Google-Login über Supabase Auth, Identität = Auth-User-ID, Login-Screen vor allem anderen, Rückkehr zur Ausgangsseite, echte RLS (siehe Security).
 - Etappe 2 (erledigt): globales Profil (`profiles`), Settings mit Name, Emoji, Farbe (oder automatisch), Abmelden.
 - Etappe 3 (erledigt): Startseite = Übersicht der eigenen Gruppen (mit Leerzustand) plus Anlegen. Gruppe verlassen mit Sicherheitsabfrage über `leave_group` (löscht Mitgliedschaft und eigene Verfügbarkeiten der Gruppe in einer Transaktion).
-- Spätere Etappen: Beitritts-Code, Admin.
+- Etappe 4 (erledigt): Beitreten per Code (siehe Identität & Login). Code anzeigen und kopieren in der Gruppenansicht, Eingabe auf der Startseite über `join_group_by_code`.
+- Spätere Etappen: Admin.
 
 ### Offen (gewünscht, Zeitpunkt entscheidet der User)
 - Runden nachträglich bearbeiten (Titel, Fenster, gesperrte Tage). RLS dafür steht bereits (`rounds_update`: Ersteller oder Admin).
