@@ -55,7 +55,7 @@ export function AuthGate({ login, children }: { login: ReactNode; children: Reac
   }, [])
 
   if (loading) {
-    return <main className="mx-auto max-w-md px-4 py-16 text-center text-gray-500">Lade…</main>
+    return <main className="mx-auto max-w-md px-4 py-16 text-center text-muted">Lade…</main>
   }
   if (!session) return <>{login}</>
   return <UserContext.Provider value={session.user}>{children}</UserContext.Provider>

@@ -33,29 +33,29 @@ export default function JoinForm({ groupSlug, groupName, onJoined }: Props) {
   }
 
   return (
-    <div className="space-y-5 rounded-2xl border border-gray-200 p-5 shadow-sm">
+    <div className="space-y-5 rounded-2xl border border-line bg-surface p-5 shadow-sm">
       <div>
         <h2 className="text-lg font-semibold">Willkommen bei „{groupName}“</h2>
-        <p className="text-sm text-gray-600">Du trittst so bei:</p>
+        <p className="text-sm text-muted">Du trittst so bei:</p>
       </div>
 
       <div className="flex items-center gap-3">
         <Avatar member={{ user_id: user.id, ...profile }} size={44} />
         <div className="min-w-0">
           <p className="truncate font-medium">{profile.name}</p>
-          <Link to="/settings" className="text-sm text-[#5b6cff] underline">
+          <Link to="/settings" className="text-sm text-accent underline">
             In den Einstellungen ändern
           </Link>
         </div>
       </div>
 
-      {error && <p className="text-sm text-rose-700">{error}</p>}
+      {error && <p className="text-sm text-no">{error}</p>}
 
       <button
         type="button"
         onClick={handleJoin}
         disabled={busy}
-        className="w-full rounded-lg bg-[#5b6cff] px-4 py-2.5 font-medium text-white disabled:opacity-50"
+        className="w-full rounded-lg bg-accent px-4 py-2.5 font-medium text-on-accent disabled:opacity-50"
       >
         {busy ? 'Trete bei…' : 'Beitreten'}
       </button>

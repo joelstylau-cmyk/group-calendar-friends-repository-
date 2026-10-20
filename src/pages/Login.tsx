@@ -20,20 +20,20 @@ export default function Login() {
     <main className="mx-auto max-w-md space-y-8 px-4 py-16">
       <header className="space-y-2">
         <h1 className="text-3xl font-bold">Gruppenkalender</h1>
-        <p className="text-gray-600">Termin mit Freunden finden. Melde dich an, um weiterzumachen.</p>
+        <p className="text-muted">Termin mit Freunden finden. Melde dich an, um weiterzumachen.</p>
       </header>
 
       <button
         type="button"
         onClick={handleClick}
         disabled={busy}
-        className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium shadow-sm hover:bg-gray-50 disabled:opacity-50"
+        className="flex w-full items-center justify-center gap-3 rounded-lg border border-faint/50 bg-surface px-4 py-2.5 font-medium shadow-sm hover:bg-paper disabled:opacity-50"
       >
         <GoogleLogo />
         {busy ? 'Weiterleitung zu Google…' : 'Mit Google anmelden'}
       </button>
 
-      {error && <p className="text-sm text-rose-700">{error}</p>}
+      {error && <p className="text-sm text-no">{error}</p>}
     </main>
   )
 }

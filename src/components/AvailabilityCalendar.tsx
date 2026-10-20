@@ -93,12 +93,12 @@ export default function AvailabilityCalendar({
         renderDay={(iso, inWindow) => {
           const day = dayOfMonth(iso)
           if (!inWindow) {
-            return <span className={`${cellBase} border-transparent text-gray-300`}>{day}</span>
+            return <span className={`${cellBase} border-transparent text-faint/60`}>{day}</span>
           }
           if (excludedSet.has(iso)) {
             return (
               <span
-                className={`${cellBase} border-transparent bg-gray-100 text-gray-400 line-through`}
+                className={`${cellBase} border-transparent bg-surface-2 text-faint line-through`}
                 style={{ backgroundImage: HATCH }}
                 aria-label={`${iso}, gesperrt`}
               >
@@ -115,14 +115,14 @@ export default function AvailabilityCalendar({
             `${iso}: ${yes} ${yes === 1 ? 'kann' : 'können'}, ${stats?.maybe.length ?? 0} vielleicht, ` +
             `${stats?.no.length ?? 0} keine Zeit; du: ${meta ? meta.label : 'keine Angabe'}`
           // Im Edit-Modus zeigt die Zellfarbe meinen Eintrag, sonst steht die Gruppe im Vordergrund.
-          const surface = editing && meta ? meta.cell : 'border-gray-200 bg-white'
-          const ring = !editing && highlight.has(iso) ? 'ring-2 ring-[#5b6cff] ring-offset-1' : ''
+          const surface = editing && meta ? meta.cell : 'border-line bg-surface'
+          const ring = !editing && highlight.has(iso) ? 'ring-2 ring-accent ring-offset-1 ring-offset-paper' : ''
           const className = `${cellBase} font-medium ${surface} ${ring} cursor-pointer`
 
           const content = (
             <>
               {yes > 0 && (
-                <span className="absolute top-0.5 left-1 text-[10px] leading-none font-semibold text-emerald-700">
+                <span className="absolute top-0.5 left-1 text-[10px] leading-none font-semibold text-yes">
                   {yes}
                 </span>
               )}
@@ -166,7 +166,7 @@ export default function AvailabilityCalendar({
 // Gestapelter Mini-Balken: Anteil kann / vielleicht / keine Zeit, Rest grau = keine Antwort
 function DayBar({ stats, total }: { stats: BlockResult; total: number }) {
   return (
-    <span className="absolute inset-x-1.5 bottom-1 flex h-1 overflow-hidden rounded-full bg-gray-200">
+    <span className="absolute inset-x-1.5 bottom-1 flex h-1 overflow-hidden rounded-full bg-line">
       {DAY_STATUSES.map((s) => {
         const n = stats[s].length
         return n > 0 ? (

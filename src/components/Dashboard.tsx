@@ -54,14 +54,14 @@ export default function Dashboard({ range, maxLength, onRange, ranking, total, o
           <Stepper label="Höchstlänge in Tagen" value={range.max} min={1} max={maxLength} onChange={setMax} />
           <span>Tage</span>
         </div>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted">
           Gezählt wird nur, wer an allen Tagen eines Blocks „kann“ eingetragen hat. Bei Gleichstand steht der längere
           Block oben.
         </p>
       </div>
 
       {!best ? (
-        <div className="rounded-2xl border border-dashed border-gray-300 p-5 text-center text-sm text-gray-600">
+        <div className="rounded-2xl border border-dashed border-faint/50 p-5 text-center text-sm text-muted">
           Für {rangeText} am Stück passt kein Block: An keinem Zeitraum dieser Länge kann jemand an allen Tagen.
         </div>
       ) : (
@@ -69,7 +69,7 @@ export default function Dashboard({ range, maxLength, onRange, ranking, total, o
           <button
             type="button"
             onClick={() => onOpen(best.days)}
-            className="w-full rounded-2xl bg-[#5b6cff] p-5 text-left text-white shadow-md transition active:scale-[0.99]"
+            className="w-full rounded-2xl bg-accent p-5 text-left text-on-accent shadow-md transition active:scale-[0.99]"
           >
             <span className="text-xs font-medium tracking-wide uppercase opacity-80">
               Aktuell bester Termin · {daysLabel(best.days.length)}
@@ -82,21 +82,21 @@ export default function Dashboard({ range, maxLength, onRange, ranking, total, o
           </button>
 
           {others.length > 0 && (
-            <ol className="divide-y divide-gray-100 rounded-2xl border border-gray-200">
+            <ol className="divide-y divide-line rounded-2xl border border-line bg-surface">
               {others.map((b) => (
                 <li key={`${b.days[0]}-${b.days.length}`}>
                   <button
                     type="button"
                     onClick={() => onOpen(b.days)}
-                    className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-gray-50"
+                    className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-paper"
                   >
                     <span className="min-w-0">
                       <span className="block text-sm font-medium">{formatDays(b.days)}</span>
-                      <span className="block text-xs text-gray-500">{daysLabel(b.days.length)}</span>
+                      <span className="block text-xs text-muted">{daysLabel(b.days.length)}</span>
                     </span>
                     <span className={`shrink-0 text-right text-sm ${STATUS_META.yes.text}`}>
                       {STATUS_META.yes.glyph} {b.yes.length} {b.yes.length === 1 ? 'kann' : 'können'} durchgehend
-                      <span className="ml-2 text-gray-400">›</span>
+                      <span className="ml-2 text-faint">›</span>
                     </span>
                   </button>
                 </li>
@@ -105,8 +105,8 @@ export default function Dashboard({ range, maxLength, onRange, ranking, total, o
           )}
 
           {ranking.emptyLengths.length > 0 && (
-            <p className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-600">
-              <span className="font-medium text-gray-800">{formatLengths(ranking.emptyLengths)} am Stück:</span> kein
+            <p className="rounded-xl bg-paper px-4 py-3 text-sm text-muted">
+              <span className="font-medium text-ink">{formatLengths(ranking.emptyLengths)} am Stück:</span> kein
               Block, an dem jemand an allen Tagen kann.
             </p>
           )}
@@ -135,9 +135,9 @@ function Stepper({ label, value, min, max, onChange }: StepperProps) {
     else onChange(Math.min(max, Math.max(min, n)))
   }
 
-  const button = 'h-9 w-9 text-lg font-medium text-gray-700 disabled:opacity-30'
+  const button = 'h-9 w-9 text-lg font-medium text-ink disabled:opacity-30'
   return (
-    <span className="inline-flex items-center rounded-lg border border-gray-300">
+    <span className="inline-flex items-center rounded-lg border border-faint/50 bg-surface">
       <button
         type="button"
         aria-label={`${label} verringern`}
@@ -158,7 +158,7 @@ function Stepper({ label, value, min, max, onChange }: StepperProps) {
           if (!Number.isNaN(n) && n >= min && n <= max) onChange(n)
         }}
         onBlur={(e) => commit(e.target.value)}
-        className="w-10 border-x border-gray-300 py-1.5 text-center text-base outline-none"
+        className="w-10 border-x border-faint/50 py-1.5 text-center text-base outline-none"
       />
       <button
         type="button"

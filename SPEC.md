@@ -42,7 +42,7 @@ Mobile-first Web-App, mit der Freundesgruppen pro Event einen Termin finden. Log
 
 ## Datenmodell (Supabase)
 
-Vollständig mit Funktionen, Rechten und Policies in `supabase/migrations/`. Kurzfassung (Stand nach 004):
+Vollständig mit Funktionen, Rechten und Policies in `supabase/migrations/`. Kurzfassung (Stand nach 007):
 
 ```sql
 create table profiles (
@@ -50,6 +50,7 @@ create table profiles (
   name text not null,                  -- 1 bis 30 Zeichen
   emoji text,
   color text,                          -- null = automatisch aus der User-ID
+  theme text not null default 'system', -- 'light' | 'dark' | 'system' (007)
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -154,8 +155,9 @@ create table availability (
 
 - Mobile-first, sauber, bewusst nicht wie when2meet.
 - Akzent Periwinkle (#5b6cff), Zustandsfarben grün / amber / rose, jeweils mit Glyph (✓ ~ ✗), nie nur über Farbe.
-- Fonts: Bricolage Grotesque (Display) und Hanken Grotesque (Body) via Google Fonts.
-- Hell/Dunkel automatisch plus Toggle (Hell / Dunkel / Automatisch in den Settings, pro Person im Profil gespeichert): bewusst erst nach dem Design-Feinschliff, damit er nicht auf einem UI entsteht, das noch umgeworfen wird.
+- Fonts: Bricolage Grotesque (Display) und Hanken Grotesk (Body) via Google Fonts.
+- Verbindlicher Bauplan für das Aussehen: `DESIGN.md` (Tokens, Typo, Komponenten, Phasen). Phase 1 (Fundament) erledigt: Tokens als CSS-Variablen in `src/index.css`, als Tailwind-Farben nutzbar (`bg-surface`, `text-muted`, …); keine festen Farben in Komponenten (Ausnahme: persönliche Mitgliedsfarben und Google-Logo).
+- Hell/Dunkel/Automatisch: Wahl in den Settings, gespeichert in `profiles.theme`, lokal gespiegelt (`localStorage` `gk-theme`); ein Inline-Skript in `index.html` setzt `data-theme` vor dem ersten Rendern. `system` = kein Attribut, dann gilt `prefers-color-scheme`.
 - Safe-Area auf Mobile beachten.
 - Eine mutige Stelle (der Kalender), der Rest ruhig.
 

@@ -33,10 +33,10 @@ export default function ConnectionStatus() {
   }[status]
 
   const color = {
-    checking: 'text-gray-500',
-    ok: 'text-green-700',
-    error: 'text-rose-700',
-    unconfigured: 'text-amber-700',
+    checking: 'text-muted',
+    ok: 'text-yes',
+    error: 'text-no',
+    unconfigured: 'text-maybe',
   }[status]
 
   return <p className={`text-sm ${color}`}>{label}</p>

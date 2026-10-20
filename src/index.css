@@ -1,1 +1,292 @@
 @import "tailwindcss";
+
+/* ============ Design-Tokens (DESIGN.md) ============
+   Komponenten nutzen nur diese Variablen, nie feste Farben.
+   Dunkel greift per prefers-color-scheme, außer data-theme="light" ist gesetzt,
+   und immer bei data-theme="dark" (Umschalter in den Settings, siehe lib/theme.ts). */
+
+:root {
+  color-scheme: light;
+
+  --paper: #f4f3f7;
+  --surface: #ffffff;
+  --surface-2: #ecebf3;
+  --ink: #1e2030;
+  --muted: #6b6d89;
+  --faint: #9a9bb6;
+  --line: #e4e2ee;
+  --accent: #5b6cff;
+  --accent-soft: #e7e9ff;
+  --on-accent: #ffffff;
+  --yes: #12b886;
+  --yes-soft: #d6f3e8;
+  --maybe: #e8a317;
+  --maybe-soft: #f8ead0;
+  --no: #ec5a72;
+  --no-soft: #fbdde2;
+
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+
+  /* DESIGN.md --shadow-sm / --shadow-md; eigene Namen, weil Tailwind
+     --shadow-sm/--shadow-md schon für shadow-sm/shadow-md verwendet. */
+  --shadow-card: 0 1px 2px rgb(30 32 48 / 0.06), 0 0 0 1px rgb(30 32 48 / 0.03);
+  --shadow-raised: 0 8px 28px rgb(30 32 48 / 0.12), 0 2px 6px rgb(30 32 48 / 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --paper: #141520;
+    --surface: #1e2030;
+    --surface-2: #282b3e;
+    --ink: #ecedf6;
+    --muted: #9a9cbd;
+    --faint: #6b6e8f;
+    --line: #2f3246;
+    --accent: #808dff;
+    --accent-soft: #2a2f54;
+    --on-accent: #15161f;
+    --yes: #2ed6a3;
+    --yes-soft: rgba(46, 214, 163, 0.16);
+    --maybe: #f1bd58;
+    --maybe-soft: rgba(241, 189, 88, 0.16);
+    --no: #ff6f88;
+    --no-soft: rgba(255, 111, 136, 0.16);
+
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 0 0 1px rgb(255 255 255 / 0.03);
+    --shadow-raised: 0 8px 28px rgb(0 0 0 / 0.5), 0 2px 6px rgb(0 0 0 / 0.3);
+  }
+}
+
+/* Gleiche Werte wie oben, für die manuelle Wahl "Dunkel" */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --paper: #141520;
+  --surface: #1e2030;
+  --surface-2: #282b3e;
+  --ink: #ecedf6;
+  --muted: #9a9cbd;
+  --faint: #6b6e8f;
+  --line: #2f3246;
+  --accent: #808dff;
+  --accent-soft: #2a2f54;
+  --on-accent: #15161f;
+  --yes: #2ed6a3;
+  --yes-soft: rgba(46, 214, 163, 0.16);
+  --maybe: #f1bd58;
+  --maybe-soft: rgba(241, 189, 88, 0.16);
+  --no: #ff6f88;
+  --no-soft: rgba(255, 111, 136, 0.16);
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 0 0 1px rgb(255 255 255 / 0.03);
+  --shadow-raised: 0 8px 28px rgb(0 0 0 / 0.5), 0 2px 6px rgb(0 0 0 / 0.3);
+}
+
+/* Tokens als Tailwind-Farben: bg-surface, text-muted, border-line, bg-yes-soft, … */
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-yes: var(--yes);
+  --color-yes-soft: var(--yes-soft);
+  --color-maybe: var(--maybe);
+  --color-maybe-soft: var(--maybe-soft);
+  --color-no: var(--no);
+  --color-no-soft: var(--no-soft);
+
+  --font-sans: "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Bricolage Grotesque", "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, sans-serif;
+}
+
+/* ============ Basis ============ */
+
+@layer base {
+  html {
+    background-color: var(--paper);
+  }
+
+  body {
+    min-height: 100dvh;
+    background-color: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2 {
+    font-family: var(--font-display);
+  }
+
+  /* Eingabefelder heben sich vom Hintergrund ab, in beiden Modi */
+  input,
+  textarea,
+  select {
+    background-color: var(--surface);
+  }
+
+  ::placeholder {
+    color: var(--faint);
+  }
+}
+
+/* ============ Basis-Komponenten ============
+   Bausteine für Phase 2; in Phase 1 sichtbar an Startseite und Settings. */
+
+@layer components {
+  /* Typo-Skala (mobil) */
+  .text-display {
+    font-family: var(--font-display);
+    font-size: 28px;
+    line-height: 1.15;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .text-h2 {
+    font-family: var(--font-display);
+    font-size: 18px;
+    line-height: 1.3;
+    font-weight: 700;
+  }
+  .text-small {
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .text-label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  /* Buttons: min. 44px Touch-Fläche */
+  .btn {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: var(--r-sm);
+    padding: 0 16px;
+    font-weight: 600;
+    transition:
+      background-color 0.15s,
+      opacity 0.15s,
+      transform 0.1s;
+  }
+  .btn:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  .btn:disabled {
+    opacity: 0.5;
+  }
+  .btn-primary {
+    background-color: var(--accent);
+    color: var(--on-accent);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--accent) 90%, var(--ink));
+  }
+  .btn-secondary {
+    background-color: var(--surface-2);
+    color: var(--ink);
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--surface-2) 85%, var(--ink));
+  }
+  /* Destruktiv: dezent, Text in --no, nicht knallrot */
+  .btn-danger {
+    background-color: transparent;
+    color: var(--no);
+  }
+  .btn-danger:hover:not(:disabled) {
+    background-color: var(--no-soft);
+  }
+
+  /* Karte: Tiefe statt Hairline */
+  .card {
+    background-color: var(--surface);
+    border: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Chip: weicher Hintergrund, kein harter Rahmen */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 999px;
+    background-color: var(--surface);
+    padding: 4px 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Eingabefeld */
+  .field {
+    width: 100%;
+    min-height: 44px;
+    border-radius: var(--r-sm);
+    border: 1px solid var(--line);
+    background-color: var(--surface);
+    padding: 8px 12px;
+    font-size: 16px;
+    color: var(--ink);
+    outline: none;
+  }
+  .field:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+
+  /* Segmented Control (z.B. Hell/Dunkel/Automatisch) */
+  .segmented {
+    display: flex;
+    gap: 4px;
+    border-radius: var(--r-md);
+    background-color: var(--surface-2);
+    padding: 4px;
+  }
+  .segmented > button {
+    flex: 1;
+    min-height: 40px;
+    border-radius: var(--r-sm);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .segmented > button[aria-pressed="true"] {
+    background-color: var(--surface);
+    color: var(--ink);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Bottom-Sheet */
+  .sheet {
+    background-color: var(--surface);
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    box-shadow: var(--shadow-raised);
+  }
+  .sheet-grabber {
+    margin: 0 auto 12px;
+    height: 5px;
+    width: 40px;
+    border-radius: 999px;
+    background-color: var(--line);
+  }
+}

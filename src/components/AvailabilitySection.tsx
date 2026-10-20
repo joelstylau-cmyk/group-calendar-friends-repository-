@@ -46,7 +46,7 @@ export default function AvailabilitySection({
         <p className="text-sm">
           Du: {answered} von {openDays.length} Tagen eingetragen
           {answered > 0 && (
-            <span className="text-gray-500">
+            <span className="text-muted">
               {' '}
               ({DAY_STATUSES.filter((s) => myCounts[s] > 0)
                 .map((s) => `${myCounts[s]} ${STATUS_META[s].glyph}`)
@@ -59,7 +59,7 @@ export default function AvailabilitySection({
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="rounded-lg bg-[#5b6cff] px-4 py-2 text-sm font-medium text-white"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent"
           >
             {answered > 0 ? 'Meine Tage bearbeiten' : 'Meine Tage eintragen'}
           </button>
@@ -67,7 +67,7 @@ export default function AvailabilitySection({
         <SaveIndicator status={saveStatus} onRetry={onRetry} />
       </div>
 
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-muted">
         {editing
           ? 'Pinsel wählen, dann Tage antippen oder mit dem Finger drüberziehen. Ein Tag mit demselben Wert wird beim Antippen wieder geleert.'
           : 'Tipp einen Tag an, um zu sehen, wer kann.'}
@@ -106,13 +106,13 @@ function SaveIndicator({ status, onRetry }: { status: SaveStatus; onRetry: () =>
   if (status === 'idle') return null
   if (status === 'error') {
     return (
-      <button type="button" onClick={onRetry} className="text-sm text-rose-700 underline">
+      <button type="button" onClick={onRetry} className="text-sm text-no underline">
         Speichern fehlgeschlagen, nochmal versuchen
       </button>
     )
   }
   return (
-    <span className="text-sm text-gray-500" aria-live="polite">
+    <span className="text-sm text-muted" aria-live="polite">
       {status === 'saved' ? '✓ gespeichert' : 'speichert…'}
     </span>
   )
@@ -123,9 +123,9 @@ const BRUSHES: { value: Brush; glyph: string; label: string; active: string }[] 
     value: s,
     glyph: STATUS_META[s].glyph,
     label: STATUS_META[s].label,
-    active: `${STATUS_META[s].cell} ring-2 ring-offset-1 ring-current`,
+    active: `${STATUS_META[s].cell} ring-2 ring-offset-1 ring-offset-surface ring-current`,
   })),
-  { value: 'clear', glyph: '⌫', label: 'leeren', active: 'border-gray-400 bg-gray-100 ring-2 ring-offset-1 ring-gray-500' },
+  { value: 'clear', glyph: '⌫', label: 'leeren', active: 'border-faint bg-surface-2 ring-2 ring-offset-1 ring-offset-surface ring-muted' },
 ]
 
 interface BrushBarProps {
@@ -139,7 +139,7 @@ interface BrushBarProps {
 function BrushBar({ brush, onBrush, status, onRetry, onDone }: BrushBarProps) {
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-10 border-t border-gray-200 bg-white/95 px-4 pt-3 shadow-[0_-4px_16px_rgb(0_0_0/0.06)] backdrop-blur"
+      className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-surface/95 px-4 pt-3 shadow-[0_-4px_16px_rgb(0_0_0/0.06)] backdrop-blur"
       style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)' }}
     >
       <div className="mx-auto max-w-md space-y-2">
@@ -152,7 +152,7 @@ function BrushBar({ brush, onBrush, status, onRetry, onDone }: BrushBarProps) {
               aria-checked={brush === b.value}
               onClick={() => onBrush(b.value)}
               className={`flex flex-col items-center rounded-xl border px-1 py-2 text-xs font-medium ${
-                brush === b.value ? b.active : 'border-gray-200 bg-white text-gray-700'
+                brush === b.value ? b.active : 'border-line bg-surface text-ink'
               }`}
             >
               <span className="text-lg leading-none font-bold">{b.glyph}</span>
@@ -165,7 +165,7 @@ function BrushBar({ brush, onBrush, status, onRetry, onDone }: BrushBarProps) {
           <button
             type="button"
             onClick={onDone}
-            className="ml-auto rounded-lg bg-[#5b6cff] px-5 py-2 text-sm font-medium text-white"
+            className="ml-auto rounded-lg bg-accent px-5 py-2 text-sm font-medium text-on-accent"
           >
             Fertig
           </button>
@@ -177,9 +177,9 @@ function BrushBar({ brush, onBrush, status, onRetry, onDone }: BrushBarProps) {
 
 function Legend({ editing }: { editing: boolean }) {
   return (
-    <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600">
+    <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
       <li className="flex items-center gap-1.5">
-        <span className="flex h-1.5 w-8 overflow-hidden rounded-full bg-gray-200">
+        <span className="flex h-1.5 w-8 overflow-hidden rounded-full bg-line">
           <span className={`w-1/2 ${STATUS_META.yes.swatch}`} />
           <span className={`w-1/4 ${STATUS_META.maybe.swatch}`} />
           <span className={`w-1/8 ${STATUS_META.no.swatch}`} />
@@ -187,7 +187,7 @@ function Legend({ editing }: { editing: boolean }) {
         Balken: kann / vielleicht / keine Zeit / grau = offen
       </li>
       <li className="flex items-center gap-1.5">
-        <span className="text-[11px] font-semibold text-emerald-700">3</span> so viele können
+        <span className="text-[11px] font-semibold text-yes">3</span> so viele können
       </li>
       <li className="flex items-center gap-1.5">
         <span className="text-[11px] font-bold">
@@ -198,11 +198,11 @@ function Legend({ editing }: { editing: boolean }) {
       </li>
       {!editing && (
         <li className="flex items-center gap-1.5">
-          <span className="inline-block h-3.5 w-3.5 rounded ring-2 ring-[#5b6cff]" /> bester Termin
+          <span className="inline-block h-3.5 w-3.5 rounded ring-2 ring-accent" /> bester Termin
         </li>
       )}
       <li className="flex items-center gap-1.5">
-        <span className="inline-block h-4 w-4 rounded bg-gray-100" style={{ backgroundImage: HATCH }} /> gesperrt
+        <span className="inline-block h-4 w-4 rounded bg-surface-2" style={{ backgroundImage: HATCH }} /> gesperrt
       </li>
     </ul>
   )

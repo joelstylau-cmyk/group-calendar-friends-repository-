@@ -1,16 +1,23 @@
 // Spiegelt die Tabellen aus SPEC.md (nur die Felder, die der Client nutzt).
 
+import type { ThemePref } from './theme'
+
 export interface Group {
   slug: string
   name: string
   created_at: string
 }
 
-// Globales Profil, eine Zeile pro Nutzer (id = Supabase-Auth-User-ID)
+// Was andere von einer Person sehen (aus profiles)
 export interface Profile {
   name: string
   emoji: string | null
   color: string | null // null = automatisch
+}
+
+// Eigenes Profil, eine Zeile pro Nutzer (id = Supabase-Auth-User-ID)
+export interface OwnProfile extends Profile {
+  theme: ThemePref
 }
 
 // Mitgliedschaft; name/emoji/color kommen aus dem Profil (von useMembers eingeblendet).

@@ -13,7 +13,7 @@ export default function ShareButton({ url }: { url: string }) {
     <button
       type="button"
       onClick={handleClick}
-      className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50"
+      className="rounded-lg border border-faint/50 px-3 py-1.5 text-sm font-medium hover:bg-paper"
     >
       {state === 'copied' ? '✓ Link kopiert' : state === 'failed' ? 'Kopieren fehlgeschlagen' : 'Link teilen'}
     </button>

@@ -15,34 +15,34 @@ export default function Start() {
   return (
     <main className="mx-auto max-w-md space-y-8 px-4 py-6">
       <header className="space-y-2">
-        <h1 className="text-3xl font-bold">Gruppenkalender</h1>
-        <p className="text-gray-600">Termin mit Freunden finden.</p>
+        <h1 className="text-display">Gruppenkalender</h1>
+        <p className="text-muted">Termin mit Freunden finden.</p>
       </header>
 
       <section aria-label="Deine Gruppen" className="space-y-3">
-        <h2 className="text-sm font-medium text-gray-500">Deine Gruppen</h2>
-        {error && <p className="text-sm text-rose-700">Gruppen laden fehlgeschlagen: {error}</p>}
+        <h2 className="text-label">Deine Gruppen</h2>
+        {error && <p className="text-sm text-no">Gruppen laden fehlgeschlagen: {error}</p>}
         {!loaded ? (
-          <p className="text-gray-500">Lade Gruppen…</p>
+          <p className="text-muted">Lade Gruppen…</p>
         ) : groups.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-gray-300 p-5 text-center text-sm text-gray-600">
+          <div className="rounded-2xl border border-dashed border-faint/50 p-5 text-center text-sm text-muted">
             <p className="text-3xl">👋</p>
-            <p className="mt-2 font-medium text-gray-800">Du bist noch in keiner Gruppe</p>
+            <p className="mt-2 font-medium text-ink">Du bist noch in keiner Gruppe</p>
             <p className="mt-1">
               Leg unten eine neue Gruppe an und teil den Link. Oder lass dir den Link oder Beitritts-Code einer
               bestehenden Gruppe schicken.
             </p>
           </div>
         ) : (
-          <ul className="divide-y divide-gray-100 rounded-2xl border border-gray-200">
+          <ul className="card divide-y divide-line overflow-hidden">
             {groups.map((g) => (
               <li key={g.slug}>
                 <Link
                   to={`/g/${g.slug}`}
-                  className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-gray-50"
+                  className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-paper"
                 >
                   <span className="min-w-0 truncate font-medium">{g.name}</span>
-                  <span className="shrink-0 text-gray-400">›</span>
+                  <span className="shrink-0 text-faint">›</span>
                 </Link>
               </li>
             ))}
@@ -96,7 +96,7 @@ function JoinByCodeForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <label className="block space-y-1">
-        <span className="text-sm font-medium">Mit Code beitreten</span>
+        <span className="text-label">Mit Code beitreten</span>
         <input
           type="text"
           value={code}
@@ -110,14 +110,14 @@ function JoinByCodeForm() {
           autoComplete="off"
           autoCorrect="off"
           spellCheck={false}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-base tracking-widest outline-none focus:border-[#5b6cff] focus:ring-2 focus:ring-[#5b6cff]/30"
+          className="field font-mono tracking-widest"
         />
       </label>
-      {error && <p className="text-sm text-rose-700">{error}</p>}
+      {error && <p className="text-sm text-no">{error}</p>}
       <button
         type="submit"
         disabled={busy || !code.trim()}
-        className="w-full rounded-lg border border-[#5b6cff] px-4 py-2.5 font-medium text-[#5b6cff] disabled:opacity-50"
+        className="btn btn-secondary w-full"
       >
         {busy ? 'Trete bei…' : 'Beitreten'}
       </button>
@@ -158,7 +158,7 @@ function CreateGroupForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <label className="block space-y-1">
-        <span className="text-sm font-medium">Name der neuen Gruppe</span>
+        <span className="text-label">Name der neuen Gruppe</span>
         <input
           type="text"
           value={name}
@@ -166,14 +166,14 @@ function CreateGroupForm() {
           placeholder="z.B. Skiurlaub-Crew"
           maxLength={60}
           required
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base outline-none focus:border-[#5b6cff] focus:ring-2 focus:ring-[#5b6cff]/30"
+          className="field"
         />
       </label>
-      {error && <p className="text-sm text-rose-700">{error}</p>}
+      {error && <p className="text-sm text-no">{error}</p>}
       <button
         type="submit"
         disabled={busy || !name.trim()}
-        className="w-full rounded-lg bg-[#5b6cff] px-4 py-2.5 font-medium text-white disabled:opacity-50"
+        className="btn btn-primary w-full"
       >
         {busy ? 'Lege an…' : 'Neue Gruppe anlegen'}
       </button>

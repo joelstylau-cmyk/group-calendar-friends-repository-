@@ -15,7 +15,7 @@ export default function AccountBar() {
       <Link
         to="/settings"
         aria-label="Einstellungen"
-        className="flex items-center gap-2 rounded-full py-1 pr-3 pl-1 text-sm text-gray-700 hover:bg-gray-100"
+        className="flex items-center gap-2 rounded-full py-1 pr-3 pl-1 text-sm text-ink hover:bg-surface-2"
       >
         <Avatar member={{ user_id: user.id, ...profile }} size={28} />
         <span className="max-w-40 truncate">{profile.name}</span>

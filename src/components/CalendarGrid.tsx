@@ -17,7 +17,7 @@ export default function CalendarGrid({ start, end, renderDay }: Props) {
           <h3 className="mb-2 font-semibold">{formatMonth(year, month)}</h3>
           <div className="grid grid-cols-7 gap-1 text-center">
             {WEEKDAYS.map((w) => (
-              <div key={w} className="pb-1 text-xs font-medium text-gray-500">
+              <div key={w} className="pb-1 text-xs font-medium text-muted">
                 {w}
               </div>
             ))}
