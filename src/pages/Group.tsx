@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import AdminSection from '../components/AdminSection'
-import JoinCodeCard from '../components/JoinCodeCard'
+import { Link, useParams } from 'react-router-dom'
 import JoinForm from '../components/JoinForm'
+import ManageGroupSheet from '../components/ManageGroupSheet'
 import RoundsSection from '../components/RoundsSection'
-import ShareButton from '../components/ShareButton'
+import ShareSheet from '../components/ShareSheet'
 import { useMembers } from '../hooks/useMembers'
 import { useUser } from '../lib/auth'
 import { getSupabase } from '../lib/supabase'
-import type { Group as GroupRow, Member } from '../lib/types'
+import type { Group as GroupRow } from '../lib/types'
 
 type GroupState =
   | { kind: 'loading' }
@@ -87,6 +86,8 @@ function GroupView({ group, onMembershipLost }: { group: GroupRow; onMembershipL
   const { members, loaded, error, reload } = useMembers(group.slug)
   const me = members.find((m) => m.user_id === userId)
   const isMember = Boolean(me)
+  const [sheet, setSheet] = useState<'share' | 'manage' | null>(null)
+  const closeSheet = useCallback(() => setSheet(null), [])
 
   // Eben noch Mitglied, jetzt nicht mehr (Gruppe von einem Admin gelöscht, oder entfernt):
   // Gruppe neu nachschlagen, damit statt des Beitreten-Formulars die passende Seite kommt.
@@ -104,8 +105,23 @@ function GroupView({ group, onMembershipLost }: { group: GroupRow; onMembershipL
           ‹ Deine Gruppen
         </Link>
         <div className="flex items-start justify-between gap-3">
-          <h1 className="text-display break-words">{group.name}</h1>
-          <ShareButton url={window.location.href} />
+          <h1 className="text-display min-w-0 break-words">{group.name}</h1>
+          {isMember && (
+            <div className="flex shrink-0 items-center gap-2">
+              <button type="button" onClick={() => setSheet('share')} className="btn btn-secondary px-3 text-sm">
+                Teilen
+              </button>
+              <button
+                type="button"
+                onClick={() => setSheet('manage')}
+                aria-label="Gruppe verwalten"
+                title="Gruppe verwalten"
+                className="btn btn-secondary w-11 px-0"
+              >
+                <GearIcon />
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
@@ -114,96 +130,33 @@ function GroupView({ group, onMembershipLost }: { group: GroupRow; onMembershipL
       {!loaded ? (
         <p className="text-muted">Lade Mitglieder…</p>
       ) : isMember ? (
-        <>
-          <JoinCodeCard groupSlug={group.slug} />
-          <RoundsSection groupSlug={group.slug} members={members} userId={userId} />
-          {me?.role === 'admin' && (
-            <AdminSection groupSlug={group.slug} groupName={group.name} members={members} userId={userId} />
-          )}
-          <LeaveGroup groupSlug={group.slug} groupName={group.name} members={members} userId={userId} />
-        </>
+        <RoundsSection groupSlug={group.slug} members={members} userId={userId} />
       ) : (
         <JoinForm groupSlug={group.slug} groupName={group.name} onJoined={reload} />
+      )}
+
+      {isMember && sheet === 'share' && (
+        <ShareSheet groupSlug={group.slug} groupName={group.name} url={window.location.href} onClose={closeSheet} />
+      )}
+      {isMember && sheet === 'manage' && (
+        <ManageGroupSheet
+          groupSlug={group.slug}
+          groupName={group.name}
+          members={members}
+          userId={userId}
+          onClose={closeSheet}
+        />
       )}
     </main>
   )
 }
 
-interface LeaveGroupProps {
-  groupSlug: string
-  groupName: string
-  members: Member[]
-  userId: string
-}
-
-function LeaveGroup({ groupSlug, groupName, members, userId }: LeaveGroupProps) {
-  const navigate = useNavigate()
-  const others = members.filter((m) => m.user_id !== userId)
-  const iAmLastAdmin =
-    members.some((m) => m.user_id === userId && m.role === 'admin') &&
-    !others.some((m) => m.role === 'admin')
-  // members ist nach Beitritt sortiert; die Datenbank wählt genauso (siehe 006_admin.sql).
-  const successor = iAmLastAdmin ? others[0] : undefined
-  const [confirming, setConfirming] = useState(false)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  async function handleLeave() {
-    setBusy(true)
-    setError(null)
-    // Mitgliedschaft und eigene Verfügbarkeiten in einem Schritt (siehe 003_leave_group.sql)
-    const { error } = await getSupabase().rpc('leave_group', { p_group_slug: groupSlug })
-    if (error) {
-      setError(`Verlassen hat nicht geklappt: ${error.message}`)
-      setBusy(false)
-      return
-    }
-    navigate('/')
-  }
-
-  if (!confirming) {
-    return (
-      <div className="border-t border-line pt-6 text-center">
-        <button type="button" onClick={() => setConfirming(true)} className="btn btn-danger text-sm">
-          Gruppe verlassen
-        </button>
-      </div>
-    )
-  }
-
+function GearIcon() {
   return (
-    <div className="card space-y-3 border-no/30 bg-no-soft p-4">
-      {others.length === 0 ? (
-        <p className="text-sm">
-          „{groupName}“ wirklich verlassen? Du bist das letzte Mitglied, die Gruppe wird dann mit allen Runden
-          gelöscht.
-        </p>
-      ) : (
-        <p className="text-sm">
-          „{groupName}“ wirklich verlassen? Deine Verfügbarkeiten in allen Runden dieser Gruppe werden gelöscht. Über
-          den Link oder den Beitritts-Code kannst du später wieder beitreten.
-          {successor && ` Da sonst niemand Admin ist, wird ${successor.name} neuer Admin.`}
-        </p>
-      )}
-      {error && <p className="text-sm text-no-ink">{error}</p>}
-      <div className="flex gap-3">
-        <button
-          type="button"
-          onClick={() => setConfirming(false)}
-          className="btn btn-secondary flex-1 text-sm"
-        >
-          Abbrechen
-        </button>
-        <button
-          type="button"
-          onClick={handleLeave}
-          disabled={busy}
-          className="btn flex-1 bg-no text-sm text-on-status"
-        >
-          {busy ? 'Verlasse…' : 'Ja, verlassen'}
-        </button>
-      </div>
-    </div>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
   )
 }
 

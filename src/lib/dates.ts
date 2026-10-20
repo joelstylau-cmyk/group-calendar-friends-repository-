@@ -41,6 +41,12 @@ export function daysInRange(start: string, end: string): string[] {
   return days
 }
 
+export function addDays(iso: string, days: number): string {
+  const date = parseISODate(iso)
+  date.setDate(date.getDate() + days)
+  return toISODate(date)
+}
+
 export function isInRange(iso: string, start: string, end: string): boolean {
   return iso >= start && iso <= end
 }

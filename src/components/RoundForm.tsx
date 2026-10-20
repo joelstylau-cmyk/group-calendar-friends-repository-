@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { dayCount, isInRange, MAX_WINDOW_DAYS, todayISO } from '../lib/dates'
 import { getSupabase } from '../lib/supabase'
 import type { DayMap, Round } from '../lib/types'
-import RoundCalendar from './RoundCalendar'
+import RoundDatePicker from './RoundDatePicker'
 
 type Props =
   | {
@@ -57,10 +57,9 @@ export default function RoundForm(props: Props) {
   // Beim Anlegen nur ab heute; beim Bearbeiten darf ein schon begonnenes Fenster bleiben
   const minDate = props.mode === 'create' ? todayISO() : undefined
 
-  function handleStartChange(value: string) {
-    setStart(value)
-    // Ende mitziehen, damit man nicht zweimal durch den Kalender blättern muss
-    if (value && (!end || end < value)) setEnd(value)
+  function handleRangeChange(nextStart: string, nextEnd: string) {
+    setStart(nextStart)
+    setEnd(nextEnd)
   }
 
   function toggleExcluded(iso: string) {
@@ -103,7 +102,7 @@ export default function RoundForm(props: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="card space-y-5 p-5">
+    <form onSubmit={handleSubmit} className="card space-y-5 p-4 sm:p-5">
       <h2 className="text-h2">{props.mode === 'create' ? 'Neue Runde' : 'Runde bearbeiten'}</h2>
 
       <label className="block space-y-1">
@@ -120,30 +119,14 @@ export default function RoundForm(props: Props) {
         />
       </label>
 
-      <div className="grid grid-cols-2 gap-3">
-        <label className="block space-y-1">
-          <span className="text-label">Von</span>
-          <input
-            type="date"
-            value={start}
-            min={minDate}
-            onChange={(e) => handleStartChange(e.target.value)}
-            required
-            className={inputClass}
-          />
-        </label>
-        <label className="block space-y-1">
-          <span className="text-label">Bis</span>
-          <input
-            type="date"
-            value={end}
-            min={start || minDate}
-            onChange={(e) => setEnd(e.target.value)}
-            required
-            className={inputClass}
-          />
-        </label>
-      </div>
+      <RoundDatePicker
+        start={start}
+        end={end}
+        excluded={excludedInRange}
+        minDate={minDate}
+        onRangeChange={handleRangeChange}
+        onToggleExcluded={toggleExcluded}
+      />
       {rangeError && <p className="text-sm text-no-ink">{rangeError}</p>}
 
       <label className="block space-y-1">
@@ -160,19 +143,6 @@ export default function RoundForm(props: Props) {
         />
       </label>
       {headcountError && <p className="text-sm text-no-ink">{headcountError}</p>}
-
-      {rangeValid && (
-        <div className="space-y-2">
-          <div>
-            <p className="text-label">Gesperrte Tage (optional)</p>
-            <p className="text-sm text-muted">
-              Tipp Tage an, die nicht in Frage kommen. Nochmal tippen hebt die Sperre auf.
-              {excludedInRange.length > 0 && ` ${excludedInRange.length} gesperrt.`}
-            </p>
-          </div>
-          <RoundCalendar start={start} end={end} excluded={excludedInRange} onToggle={toggleExcluded} />
-        </div>
-      )}
 
       {hidden && hidden.people > 0 && (
         <div role="status" className="rounded-[var(--r-md)] bg-maybe-soft p-4 text-sm text-ink">
