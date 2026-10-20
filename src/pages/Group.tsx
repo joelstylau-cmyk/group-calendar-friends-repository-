@@ -1,5 +1,6 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import AdminSection from '../components/AdminSection'
 import JoinCodeCard from '../components/JoinCodeCard'
 import JoinForm from '../components/JoinForm'
 import RoundsSection from '../components/RoundsSection'
@@ -7,17 +8,21 @@ import ShareButton from '../components/ShareButton'
 import { useMembers } from '../hooks/useMembers'
 import { useUser } from '../lib/auth'
 import { getSupabase } from '../lib/supabase'
-import type { Group as GroupRow } from '../lib/types'
+import type { Group as GroupRow, Member } from '../lib/types'
 
 type GroupState =
   | { kind: 'loading' }
   | { kind: 'notfound' }
+  | { kind: 'gone' } // war gerade noch da, wurde inzwischen gelöscht
   | { kind: 'error'; message: string }
   | { kind: 'ready'; group: GroupRow }
 
 export default function Group() {
   const { slug = '' } = useParams()
   const [state, setState] = useState<GroupState>({ kind: 'loading' })
+  // Hochzählen lädt die Gruppe neu (z.B. wenn die eigene Mitgliedschaft verschwindet)
+  const [recheck, setRecheck] = useState(0)
+  const onMembershipLost = useCallback(() => setRecheck((n) => n + 1), [])
 
   useEffect(() => {
     let cancelled = false
@@ -29,13 +34,13 @@ export default function Group() {
       .then(({ data, error }) => {
         if (cancelled) return
         if (error) setState({ kind: 'error', message: error.message })
-        else if (!data) setState({ kind: 'notfound' })
+        else if (!data) setState({ kind: recheck > 0 ? 'gone' : 'notfound' })
         else setState({ kind: 'ready', group: data as GroupRow })
       })
     return () => {
       cancelled = true
     }
-  }, [slug])
+  }, [slug, recheck])
 
   if (state.kind === 'loading') {
     return <CenteredMessage>Lade Gruppe…</CenteredMessage>
@@ -54,6 +59,18 @@ export default function Group() {
       </CenteredMessage>
     )
   }
+  if (state.kind === 'gone') {
+    return (
+      <CenteredMessage>
+        <p className="text-4xl">🗑️</p>
+        <h1 className="text-xl font-semibold">Diese Gruppe wurde gelöscht</h1>
+        <p className="text-gray-600">Ein Admin hat die Gruppe samt allen Runden gelöscht.</p>
+        <Link to="/" className="inline-block text-[#5b6cff] underline">
+          Zu deinen Gruppen
+        </Link>
+      </CenteredMessage>
+    )
+  }
   if (state.kind === 'error') {
     return (
       <CenteredMessage>
@@ -62,13 +79,23 @@ export default function Group() {
       </CenteredMessage>
     )
   }
-  return <GroupView group={state.group} />
+  return <GroupView group={state.group} onMembershipLost={onMembershipLost} />
 }
 
-function GroupView({ group }: { group: GroupRow }) {
+function GroupView({ group, onMembershipLost }: { group: GroupRow; onMembershipLost: () => void }) {
   const userId = useUser().id
   const { members, loaded, error, reload } = useMembers(group.slug)
-  const isMember = members.some((m) => m.user_id === userId)
+  const me = members.find((m) => m.user_id === userId)
+  const isMember = Boolean(me)
+
+  // Eben noch Mitglied, jetzt nicht mehr (Gruppe von einem Admin gelöscht, oder entfernt):
+  // Gruppe neu nachschlagen, damit statt des Beitreten-Formulars die passende Seite kommt.
+  const wasMember = useRef(false)
+  useEffect(() => {
+    if (!loaded) return
+    if (wasMember.current && !isMember) onMembershipLost()
+    wasMember.current = isMember
+  }, [loaded, isMember, onMembershipLost])
 
   return (
     <main className="mx-auto max-w-md space-y-6 px-4 py-6">
@@ -88,7 +115,10 @@ function GroupView({ group }: { group: GroupRow }) {
         <>
           <JoinCodeCard groupSlug={group.slug} />
           <RoundsSection groupSlug={group.slug} members={members} userId={userId} />
-          <LeaveGroup groupSlug={group.slug} groupName={group.name} />
+          {me?.role === 'admin' && (
+            <AdminSection groupSlug={group.slug} groupName={group.name} members={members} userId={userId} />
+          )}
+          <LeaveGroup groupSlug={group.slug} groupName={group.name} members={members} userId={userId} />
         </>
       ) : (
         <JoinForm groupSlug={group.slug} groupName={group.name} onJoined={reload} />
@@ -97,8 +127,21 @@ function GroupView({ group }: { group: GroupRow }) {
   )
 }
 
-function LeaveGroup({ groupSlug, groupName }: { groupSlug: string; groupName: string }) {
+interface LeaveGroupProps {
+  groupSlug: string
+  groupName: string
+  members: Member[]
+  userId: string
+}
+
+function LeaveGroup({ groupSlug, groupName, members, userId }: LeaveGroupProps) {
   const navigate = useNavigate()
+  const others = members.filter((m) => m.user_id !== userId)
+  const iAmLastAdmin =
+    members.some((m) => m.user_id === userId && m.role === 'admin') &&
+    !others.some((m) => m.role === 'admin')
+  // members ist nach Beitritt sortiert; die Datenbank wählt genauso (siehe 006_admin.sql).
+  const successor = iAmLastAdmin ? others[0] : undefined
   const [confirming, setConfirming] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -128,10 +171,18 @@ function LeaveGroup({ groupSlug, groupName }: { groupSlug: string; groupName: st
 
   return (
     <div className="space-y-3 rounded-xl border border-rose-200 bg-rose-50 p-4">
-      <p className="text-sm">
-        „{groupName}“ wirklich verlassen? Deine Verfügbarkeiten in allen Runden dieser Gruppe werden gelöscht. Über
-        den Link oder den Beitritts-Code kannst du später wieder beitreten.
-      </p>
+      {others.length === 0 ? (
+        <p className="text-sm">
+          „{groupName}“ wirklich verlassen? Du bist das letzte Mitglied, die Gruppe wird dann mit allen Runden
+          gelöscht.
+        </p>
+      ) : (
+        <p className="text-sm">
+          „{groupName}“ wirklich verlassen? Deine Verfügbarkeiten in allen Runden dieser Gruppe werden gelöscht. Über
+          den Link oder den Beitritts-Code kannst du später wieder beitreten.
+          {successor && ` Da sonst niemand Admin ist, wird ${successor.name} neuer Admin.`}
+        </p>
+      )}
       {error && <p className="text-sm text-rose-700">{error}</p>}
       <div className="flex gap-3">
         <button

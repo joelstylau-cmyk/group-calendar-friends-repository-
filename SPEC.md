@@ -31,9 +31,13 @@ Mobile-first Web-App, mit der Freundesgruppen pro Event einen Termin finden. Log
   - `profiles`: sehen das eigene Profil und Profile von Leuten aus gemeinsamen Gruppen. Ändern nur das eigene, nur `name`, `emoji`, `color`. Anlegen nur per Trigger.
   - `groups`: lesen nur Mitglieder und Ersteller; Lookup per Link über die Funktion `get_group(slug)` (gibt nur Slug und Name preis, nicht den Code). Anlegen darf jeder Eingeloggte; den Beitritts-Code vergibt immer die Datenbank (Trigger).
   - `members`: Mitglieder sehen einander. Beitreten nur als man selbst und nur mit Rolle `member` (auch `join_group_by_code` trägt nur den Aufrufer als `member` ein). Keine Änderungen per Client. Austreten selbst oder durch Admin.
-  - `rounds`: Mitglieder sehen und legen an. Ändern und Löschen: Ersteller ODER Admin.
+  - `rounds`: Mitglieder sehen und legen an. Ändern und Löschen: Ersteller ODER Admin. Ändern nur der Inhaltsfelder (`title`, `start_date`, `end_date`, `excluded_dates`, `headcount`, `status`, `decided_dates`), nie `group_slug` oder `created_by`.
   - `availability`: Mitglieder der Runde sehen alles, schreiben nur die eigene Zeile.
-- Admin: Rolle `members.role = 'admin'`, ausgewertet ausschließlich in der Funktion `is_group_admin(group_slug)`. Ändert sich später, was Admin bedeutet, wird nur diese Funktion angepasst, die Policies bleiben. Aktuell gibt es keinen Weg, Admin zu werden.
+- Admin: Rolle `members.role = 'admin'`, ausgewertet ausschließlich in der Funktion `is_group_admin(group_slug)`. Ändert sich später, was Admin bedeutet, wird nur diese Funktion angepasst, die Policies bleiben. Regeln (006):
+  - Der Ersteller wird beim Anlegen per Trigger Admin-Mitglied.
+  - Admins sind gleichberechtigt: jeder Admin macht Mitglieder zu Admins und stuft Admins herab, nur den letzten Admin nicht. Einziger Weg dafür ist `set_member_role` (prüft per `auth.uid()`, ob der Aufrufer Admin ist); `members` ist per Client nicht änderbar, Beitreten erzwingt `role = 'member'`.
+  - Jeder Admin darf die Gruppe über `delete_group` löschen (Runden, Mitgliedschaften, Verfügbarkeiten per Cascade). `groups` ist per Client weder änderbar noch löschbar.
+  - Nach jedem Austritt (Trigger auf `members`, sperrt die Gruppenzeile): letztes Mitglied weg → Gruppe wird gelöscht; letzter Admin weg → ältestes verbliebenes Mitglied wird Admin. Es gibt also nie eine Gruppe ohne Admin und keine leeren Gruppen.
 - Der Supabase anon-Key ist öffentlich by design und darf ins Frontend. Der service-role-Key NIEMALS.
 
 ## Datenmodell (Supabase)
@@ -141,7 +145,7 @@ create table availability (
 - Etappe 2 (erledigt): globales Profil (`profiles`), Settings mit Name, Emoji, Farbe (oder automatisch), Abmelden.
 - Etappe 3 (erledigt): Startseite = Übersicht der eigenen Gruppen (mit Leerzustand) plus Anlegen. Gruppe verlassen mit Sicherheitsabfrage über `leave_group` (löscht Mitgliedschaft und eigene Verfügbarkeiten der Gruppe in einer Transaktion).
 - Etappe 4 (erledigt): Beitreten per Code (siehe Identität & Login). Code anzeigen und kopieren in der Gruppenansicht, Eingabe auf der Startseite über `join_group_by_code`.
-- Spätere Etappen: Admin.
+- Etappe 5 (erledigt): Admin-Rechte (siehe Security). Admin-Kennzeichen in der Mitgliederleiste; für Admins Abschnitt „Mitglieder & Admins“ mit Ernennen/Entziehen und „Gruppe löschen“; Runden löschen für Ersteller und Admins; Verlassen-Abfrage nennt Nachfolger bzw. Löschung der Gruppe.
 
 ### Offen (gewünscht, Zeitpunkt entscheidet der User)
 - Runden nachträglich bearbeiten (Titel, Fenster, gesperrte Tage). RLS dafür steht bereits (`rounds_update`: Ersteller oder Admin).

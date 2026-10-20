@@ -39,6 +39,7 @@ export default function MemberBar({ members, userId, answered, target }: Props) 
                   {m.name}
                   {m.user_id === userId && <span className="text-gray-500"> (du)</span>}
                 </span>
+                {m.role === 'admin' && <span className="-mt-1 text-[10px] font-medium text-[#5b6cff]">Admin</span>}
                 {answered && !hasAnswered && <span className="sr-only">hat noch nicht geantwortet</span>}
               </li>
             )

@@ -45,6 +45,8 @@ export default function RoundView({ round, members, userId, onDeleted }: Props) 
 
   const creator = membersById.get(round.created_by ?? '')
   const isCreator = round.created_by === userId
+  // Gleiche Regel wie rounds_delete/rounds_update in der Datenbank: Ersteller ODER Admin
+  const canManage = isCreator || membersById.get(userId)?.role === 'admin'
   const days = dayCount(round.start_date, round.end_date)
 
   return (
@@ -96,7 +98,7 @@ export default function RoundView({ round, members, userId, onDeleted }: Props) 
         </>
       )}
 
-      {isCreator && <DeleteRound roundId={round.id} onDeleted={onDeleted} />}
+      {canManage && <DeleteRound roundId={round.id} onDeleted={onDeleted} />}
 
       {sheetDays && (
         <BlockSheet
