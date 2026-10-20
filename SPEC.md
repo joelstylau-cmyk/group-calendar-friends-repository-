@@ -137,7 +137,8 @@ create table availability (
 ### Identitäts-Umbau (in Etappen)
 - Etappe 1 (erledigt): Login-Unterbau. Google-Login über Supabase Auth, Identität = Auth-User-ID, Login-Screen vor allem anderen, Rückkehr zur Ausgangsseite, echte RLS (siehe Security).
 - Etappe 2 (erledigt): globales Profil (`profiles`), Settings mit Name, Emoji, Farbe (oder automatisch), Abmelden.
-- Spätere Etappen: Gruppen-Übersicht, Gruppe verlassen, Beitritts-Code, Admin.
+- Etappe 3 (erledigt): Startseite = Übersicht der eigenen Gruppen (mit Leerzustand) plus Anlegen. Gruppe verlassen mit Sicherheitsabfrage über `leave_group` (löscht Mitgliedschaft und eigene Verfügbarkeiten der Gruppe in einer Transaktion).
+- Spätere Etappen: Beitritts-Code, Admin.
 
 ### Offen (gewünscht, Zeitpunkt entscheidet der User)
 - Runden nachträglich bearbeiten (Titel, Fenster, gesperrte Tage). RLS dafür steht bereits (`rounds_update`: Ersteller oder Admin).

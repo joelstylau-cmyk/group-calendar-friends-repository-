@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import JoinForm from '../components/JoinForm'
 import RoundsSection from '../components/RoundsSection'
 import ShareButton from '../components/ShareButton'
@@ -71,6 +71,9 @@ function GroupView({ group }: { group: GroupRow }) {
 
   return (
     <main className="mx-auto max-w-md space-y-6 px-4 py-6">
+      <Link to="/" className="inline-block text-sm text-[#5b6cff]">
+        ‹ Deine Gruppen
+      </Link>
       <header className="flex items-start justify-between gap-3">
         <h1 className="text-2xl font-bold break-words">{group.name}</h1>
         <ShareButton url={window.location.href} />
@@ -81,11 +84,71 @@ function GroupView({ group }: { group: GroupRow }) {
       {!loaded ? (
         <p className="text-gray-500">Lade Mitglieder…</p>
       ) : isMember ? (
-        <RoundsSection groupSlug={group.slug} members={members} userId={userId} />
+        <>
+          <RoundsSection groupSlug={group.slug} members={members} userId={userId} />
+          <LeaveGroup groupSlug={group.slug} groupName={group.name} />
+        </>
       ) : (
         <JoinForm groupSlug={group.slug} groupName={group.name} onJoined={reload} />
       )}
     </main>
+  )
+}
+
+function LeaveGroup({ groupSlug, groupName }: { groupSlug: string; groupName: string }) {
+  const navigate = useNavigate()
+  const [confirming, setConfirming] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleLeave() {
+    setBusy(true)
+    setError(null)
+    // Mitgliedschaft und eigene Verfügbarkeiten in einem Schritt (siehe 003_leave_group.sql)
+    const { error } = await getSupabase().rpc('leave_group', { p_group_slug: groupSlug })
+    if (error) {
+      setError(`Verlassen hat nicht geklappt: ${error.message}`)
+      setBusy(false)
+      return
+    }
+    navigate('/')
+  }
+
+  if (!confirming) {
+    return (
+      <div className="border-t border-gray-100 pt-6 text-center">
+        <button type="button" onClick={() => setConfirming(true)} className="text-sm text-rose-700 underline">
+          Gruppe verlassen
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3 rounded-xl border border-rose-200 bg-rose-50 p-4">
+      <p className="text-sm">
+        „{groupName}“ wirklich verlassen? Deine Verfügbarkeiten in allen Runden dieser Gruppe werden gelöscht. Über
+        den Link kannst du später wieder beitreten.
+      </p>
+      {error && <p className="text-sm text-rose-700">{error}</p>}
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={() => setConfirming(false)}
+          className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium"
+        >
+          Abbrechen
+        </button>
+        <button
+          type="button"
+          onClick={handleLeave}
+          disabled={busy}
+          className="flex-1 rounded-lg bg-rose-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+        >
+          {busy ? 'Verlasse…' : 'Ja, verlassen'}
+        </button>
+      </div>
+    </div>
   )
 }
 
