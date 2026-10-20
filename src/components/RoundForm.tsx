@@ -1,24 +1,37 @@
 import { useState, type FormEvent } from 'react'
 import { dayCount, isInRange, MAX_WINDOW_DAYS, todayISO } from '../lib/dates'
 import { getSupabase } from '../lib/supabase'
+import type { DayMap, Round } from '../lib/types'
 import RoundCalendar from './RoundCalendar'
 
-interface Props {
-  groupSlug: string
-  userId: string
-  onCreated: (roundId: string) => void
-  onCancel: () => void
-}
+type Props =
+  | {
+      mode: 'create'
+      groupSlug: string
+      userId: string
+      onDone: (roundId: string) => void
+      onCancel: () => void
+    }
+  | {
+      mode: 'edit'
+      round: Round
+      // Einträge aller Personen (user_id -> Tage), für den Hinweis auf rausfallende Tage
+      entries: Map<string, DayMap>
+      onDone: (roundId: string) => void
+      onCancel: () => void
+    }
 
 const inputClass =
   'w-full rounded-lg border border-gray-300 px-3 py-2 text-base outline-none focus:border-[#5b6cff] focus:ring-2 focus:ring-[#5b6cff]/30'
 
-export default function CreateRoundForm({ groupSlug, userId, onCreated, onCancel }: Props) {
-  const [title, setTitle] = useState('')
-  const [start, setStart] = useState('')
-  const [end, setEnd] = useState('')
-  const [headcount, setHeadcount] = useState('')
-  const [excluded, setExcluded] = useState<string[]>([])
+// Runde anlegen oder bearbeiten (bearbeiten dürfen Ersteller und Admins, siehe rounds_update).
+export default function RoundForm(props: Props) {
+  const initial = props.mode === 'edit' ? props.round : null
+  const [title, setTitle] = useState(initial?.title ?? '')
+  const [start, setStart] = useState(initial?.start_date ?? '')
+  const [end, setEnd] = useState(initial?.end_date ?? '')
+  const [headcount, setHeadcount] = useState(initial?.headcount != null ? String(initial.headcount) : '')
+  const [excluded, setExcluded] = useState<string[]>(initial?.excluded_dates ?? [])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -39,6 +52,12 @@ export default function CreateRoundForm({ groupSlug, userId, onCreated, onCancel
   // Nur gesperrte Tage im aktuellen Fenster zählen (Fenster kann sich nachträglich ändern)
   const excludedInRange = rangeValid ? excluded.filter((d) => isInRange(d, start, end)).sort() : []
 
+  const hidden =
+    props.mode === 'edit' && rangeValid ? newlyHiddenEntries(props.round, props.entries, start, end, excludedInRange) : null
+
+  // Beim Anlegen nur ab heute; beim Bearbeiten darf ein schon begonnenes Fenster bleiben
+  const minDate = props.mode === 'create' ? todayISO() : undefined
+
   function handleStartChange(value: string) {
     setStart(value)
     // Ende mitziehen, damit man nicht zweimal durch den Kalender blättern muss
@@ -54,30 +73,39 @@ export default function CreateRoundForm({ groupSlug, userId, onCreated, onCancel
     if (!title.trim() || !rangeValid || headcountError) return
     setBusy(true)
     setError(null)
-    const { data, error } = await getSupabase()
-      .from('rounds')
-      .insert({
-        group_slug: groupSlug,
-        title: title.trim(),
-        start_date: start,
-        end_date: end,
-        excluded_dates: excludedInRange,
-        headcount: headcountNumber,
-        created_by: userId,
-      })
-      .select('id')
-      .single()
+    const fields = {
+      title: title.trim(),
+      start_date: start,
+      end_date: end,
+      excluded_dates: excludedInRange,
+      headcount: headcountNumber,
+    }
+    const supabase = getSupabase()
+    const { data, error } =
+      props.mode === 'create'
+        ? await supabase
+            .from('rounds')
+            .insert({ ...fields, group_slug: props.groupSlug, created_by: props.userId })
+            .select('id')
+            .maybeSingle()
+        : // Ohne Recht (weder Ersteller noch Admin) ändert RLS still keine Zeile; select macht das sichtbar.
+          await supabase.from('rounds').update(fields).eq('id', props.round.id).select('id').maybeSingle()
     setBusy(false)
+    const verb = props.mode === 'create' ? 'Runde anlegen' : 'Speichern'
     if (error) {
-      setError(`Runde anlegen hat nicht geklappt: ${error.message}`)
+      setError(`${verb} hat nicht geklappt: ${error.message}`)
       return
     }
-    onCreated((data as { id: string }).id)
+    if (!data) {
+      setError(`${verb} hat nicht geklappt: Nur wer die Runde angelegt hat und Admins dürfen sie ändern.`)
+      return
+    }
+    props.onDone((data as { id: string }).id)
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-gray-200 p-5 shadow-sm">
-      <h2 className="text-lg font-semibold">Neue Runde</h2>
+      <h2 className="text-lg font-semibold">{props.mode === 'create' ? 'Neue Runde' : 'Runde bearbeiten'}</h2>
 
       <label className="block space-y-1">
         <span className="text-sm font-medium">Titel</span>
@@ -88,7 +116,7 @@ export default function CreateRoundForm({ groupSlug, userId, onCreated, onCancel
           placeholder="z.B. Silvester-Hütte"
           maxLength={60}
           required
-          autoFocus
+          autoFocus={props.mode === 'create'}
           className={inputClass}
         />
       </label>
@@ -99,7 +127,7 @@ export default function CreateRoundForm({ groupSlug, userId, onCreated, onCancel
           <input
             type="date"
             value={start}
-            min={todayISO()}
+            min={minDate}
             onChange={(e) => handleStartChange(e.target.value)}
             required
             className={inputClass}
@@ -110,7 +138,7 @@ export default function CreateRoundForm({ groupSlug, userId, onCreated, onCancel
           <input
             type="date"
             value={end}
-            min={start || todayISO()}
+            min={start || minDate}
             onChange={(e) => setEnd(e.target.value)}
             required
             className={inputClass}
@@ -147,12 +175,24 @@ export default function CreateRoundForm({ groupSlug, userId, onCreated, onCancel
         </div>
       )}
 
+      {hidden && hidden.people > 0 && (
+        <div role="status" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+          <p className="font-medium">⚠ Eingetragene Tage fallen raus</p>
+          <p className="mt-1">
+            {hidden.people === 1 ? '1 Person hat' : `${hidden.people} Personen haben`} an{' '}
+            {hidden.days === 1 ? '1 Tag' : `${hidden.days} Tagen`}, die jetzt außerhalb des Fensters liegen oder
+            gesperrt sind, schon etwas eingetragen. Die Einträge bleiben gespeichert, werden aber ausgeblendet und
+            zählen nicht mehr. Kommen die Tage später wieder ins Fenster, sind sie wieder da.
+          </p>
+        </div>
+      )}
+
       {error && <p className="text-sm text-rose-700">{error}</p>}
 
       <div className="flex gap-3">
         <button
           type="button"
-          onClick={onCancel}
+          onClick={props.onCancel}
           className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 font-medium hover:bg-gray-50"
         >
           Abbrechen
@@ -162,9 +202,36 @@ export default function CreateRoundForm({ groupSlug, userId, onCreated, onCancel
           disabled={busy || !title.trim() || !rangeValid || Boolean(headcountError)}
           className="flex-1 rounded-lg bg-[#5b6cff] px-4 py-2.5 font-medium text-white disabled:opacity-50"
         >
-          {busy ? 'Lege an…' : 'Runde anlegen'}
+          {props.mode === 'create' ? (busy ? 'Lege an…' : 'Runde anlegen') : busy ? 'Speichere…' : 'Speichern'}
         </button>
       </div>
     </form>
   )
+}
+
+// Wie viele Personen an wie vielen Tagen Einträge haben, die bisher sichtbar
+// waren und mit dem neuen Fenster bzw. den neuen Sperren ausgeblendet würden.
+// Gelöscht wird nichts: Einträge außerhalb des Fensters bleiben in availability.days.
+function newlyHiddenEntries(
+  round: Round,
+  entries: Map<string, DayMap>,
+  start: string,
+  end: string,
+  excluded: string[],
+): { people: number; days: number } {
+  const oldExcluded = new Set(round.excluded_dates)
+  const newExcluded = new Set(excluded)
+  const people = new Set<string>()
+  const days = new Set<string>()
+  for (const [person, map] of entries) {
+    for (const day of Object.keys(map)) {
+      const wasVisible = isInRange(day, round.start_date, round.end_date) && !oldExcluded.has(day)
+      const staysVisible = isInRange(day, start, end) && !newExcluded.has(day)
+      if (wasVisible && !staysVisible) {
+        people.add(person)
+        days.add(day)
+      }
+    }
+  }
+  return { people: people.size, days: days.size }
 }

@@ -9,15 +9,18 @@ import AvailabilitySection from './AvailabilitySection'
 import BlockSheet from './BlockSheet'
 import Dashboard, { type LengthRange } from './Dashboard'
 import MemberBar from './MemberBar'
+import RoundForm from './RoundForm'
 
 interface Props {
   round: Round
   members: Member[]
   userId: string
   onDeleted: () => void
+  onEdited: () => void
 }
 
-export default function RoundView({ round, members, userId, onDeleted }: Props) {
+export default function RoundView({ round, members, userId, onDeleted, onEdited }: Props) {
+  const [editing, setEditing] = useState(false)
   const { rows, loaded, error } = useLiveRows<Availability>('availability', 'round_id', round.id, {
     orderBy: 'updated_at',
   })
@@ -27,7 +30,12 @@ export default function RoundView({ round, members, userId, onDeleted }: Props) 
   const closeSheet = useCallback(() => setSheetDays(null), [])
 
   const windowDays = useMemo(() => daysInRange(round.start_date, round.end_date), [round.start_date, round.end_date])
-  const [lengthRange, setLengthRange] = useState<LengthRange>(() => ({ min: 1, max: Math.min(3, windowDays.length) }))
+  const [chosenRange, setLengthRange] = useState<LengthRange>(() => ({ min: 1, max: Math.min(3, windowDays.length) }))
+  // Nach dem Verkleinern des Fensters darf die Spanne nicht länger als das Fenster sein
+  const lengthRange: LengthRange = {
+    min: Math.min(chosenRange.min, windowDays.length),
+    max: Math.min(chosenRange.max, windowDays.length),
+  }
   const excluded = useMemo(() => new Set(round.excluded_dates), [round.excluded_dates])
   const openDays = windowDays.filter((d) => !excluded.has(d))
 
@@ -49,10 +57,36 @@ export default function RoundView({ round, members, userId, onDeleted }: Props) 
   const canManage = isCreator || membersById.get(userId)?.role === 'admin'
   const days = dayCount(round.start_date, round.end_date)
 
+  if (editing) {
+    return (
+      <RoundForm
+        mode="edit"
+        round={round}
+        entries={entries}
+        onCancel={() => setEditing(false)}
+        onDone={() => {
+          setEditing(false)
+          onEdited()
+        }}
+      />
+    )
+  }
+
   return (
     <article className="space-y-6">
       <header className="space-y-1">
-        <h2 className="text-xl font-semibold break-words">{round.title}</h2>
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="text-xl font-semibold break-words">{round.title}</h2>
+          {canManage && (
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="shrink-0 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50"
+            >
+              Bearbeiten
+            </button>
+          )}
+        </div>
         <p className="text-gray-700">{formatRange(round.start_date, round.end_date)}</p>
         <p className="text-sm text-gray-500">
           {days} {days === 1 ? 'Tag' : 'Tage'}

@@ -148,7 +148,7 @@ create table availability (
 - Etappe 5 (erledigt): Admin-Rechte (siehe Security). Admin-Kennzeichen in der Mitgliederleiste; für Admins Abschnitt „Mitglieder & Admins“ mit Ernennen/Entziehen und „Gruppe löschen“; Runden löschen für Ersteller und Admins; Verlassen-Abfrage nennt Nachfolger bzw. Löschung der Gruppe.
 
 ### Offen (gewünscht, Zeitpunkt entscheidet der User)
-- Runden nachträglich bearbeiten (Titel, Fenster, gesperrte Tage). RLS dafür steht bereits (`rounds_update`: Ersteller oder Admin).
+- (erledigt) Runden nachträglich bearbeiten: Titel, Fenster, Gruppengröße, gesperrte Tage. Button „Bearbeiten“ nur für Ersteller und Admins (`rounds_update`, nur Inhaltsfelder). Einträge an Tagen, die durch Verkleinern oder Sperren rausfallen, bleiben in `availability.days` gespeichert, werden ausgeblendet und zählen nicht; kommt der Tag wieder ins Fenster, sind sie wieder da. Das Formular warnt vorher, wie viele Personen an wie vielen Tagen betroffen sind.
 
 ## Design-Richtung
 

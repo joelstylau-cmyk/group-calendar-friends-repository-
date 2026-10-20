@@ -3,8 +3,8 @@ import { useSearchParams } from 'react-router-dom'
 import { useRounds } from '../hooks/useRounds'
 import { formatRange } from '../lib/dates'
 import type { Member, Round } from '../lib/types'
-import CreateRoundForm from './CreateRoundForm'
 import MemberBar from './MemberBar'
+import RoundForm from './RoundForm'
 import RoundView from './RoundView'
 
 interface Props {
@@ -33,11 +33,12 @@ export default function RoundsSection({ groupSlug, members, userId }: Props) {
 
   if (creating) {
     return (
-      <CreateRoundForm
+      <RoundForm
+        mode="create"
         groupSlug={groupSlug}
         userId={userId}
         onCancel={() => setCreating(false)}
-        onCreated={(id) => {
+        onDone={(id) => {
           setCreating(false)
           select(id)
           void reload()
@@ -103,6 +104,7 @@ export default function RoundsSection({ groupSlug, members, userId }: Props) {
               select(null)
               void reload()
             }}
+            onEdited={() => void reload()}
           />
         </>
       )}
