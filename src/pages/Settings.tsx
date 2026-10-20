@@ -23,6 +23,7 @@ function SettingsForm() {
   const [emoji, setEmoji] = useState(profile.emoji)
   const [color, setColor] = useState(profile.color)
   const [busy, setBusy] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
   const [message, setMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null)
 
   const trimmed = name.trim()
@@ -160,10 +161,14 @@ function SettingsForm() {
         <p className="text-sm text-gray-500">Angemeldet mit Google als {user.email}</p>
         <button
           type="button"
-          onClick={() => void signOut()}
-          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
+          onClick={() => {
+            setSigningOut(true)
+            void signOut()
+          }}
+          disabled={signingOut}
+          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
         >
-          Abmelden
+          {signingOut ? 'Melde ab…' : 'Abmelden'}
         </button>
       </section>
     </main>

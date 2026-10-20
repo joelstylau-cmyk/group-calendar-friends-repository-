@@ -22,13 +22,20 @@ export async function signInWithGoogle(): Promise<string | null> {
     provider: 'google',
     // Zurück auf genau die Seite, auf der man war (inkl. ?r=…). Muss in Supabase
     // unter Redirect URLs erlaubt sein, sonst landet man auf der Site URL.
-    options: { redirectTo: window.location.href },
+    options: {
+      redirectTo: window.location.href,
+      // Immer die Google-Kontoauswahl zeigen, statt still das zuletzt genutzte Konto zu nehmen.
+      queryParams: { prompt: 'select_account' },
+    },
   })
   return error?.message ?? null
 }
 
+// Beendet die Sitzung dieses Geräts serverseitig und lokal (andere Geräte bleiben angemeldet).
+// Die lokale Sitzung löscht supabase-js auch, wenn der Server nicht erreichbar ist;
+// AuthGate zeigt danach über onAuthStateChange den Login-Screen.
 export async function signOut(): Promise<void> {
-  await getSupabase().auth.signOut()
+  await getSupabase().auth.signOut({ scope: 'local' })
 }
 
 // Rendert die Kinder nur mit gültiger Session, sonst den Login-Screen.
