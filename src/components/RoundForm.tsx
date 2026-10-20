@@ -180,8 +180,10 @@ export default function RoundForm(props: Props) {
           <p className="font-medium">⚠ Eingetragene Tage fallen raus</p>
           <p className="mt-1">
             {hidden.people === 1 ? '1 Person hat' : `${hidden.people} Personen haben`} an{' '}
-            {hidden.days === 1 ? '1 Tag' : `${hidden.days} Tagen`}, die jetzt außerhalb des Fensters liegen oder
-            gesperrt sind, schon etwas eingetragen. Die Einträge bleiben gespeichert, werden aber ausgeblendet und
+            {hidden.days === 1
+              ? '1 Tag, der jetzt außerhalb des Fensters liegt oder gesperrt ist,'
+              : `${hidden.days} Tagen, die jetzt außerhalb des Fensters liegen oder gesperrt sind,`}{' '}
+            schon etwas eingetragen. Die Einträge bleiben gespeichert, werden aber ausgeblendet und
             zählen nicht mehr. Kommen die Tage später wieder ins Fenster, sind sie wieder da.
           </p>
         </div>
