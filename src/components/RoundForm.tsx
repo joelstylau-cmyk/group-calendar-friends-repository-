@@ -21,8 +21,7 @@ type Props =
       onCancel: () => void
     }
 
-const inputClass =
-  'w-full rounded-lg border border-faint/50 px-3 py-2 text-base outline-none focus:border-accent focus:ring-2 focus:ring-accent/30'
+const inputClass = 'field'
 
 // Runde anlegen oder bearbeiten (bearbeiten dürfen Ersteller und Admins, siehe rounds_update).
 export default function RoundForm(props: Props) {
@@ -104,11 +103,11 @@ export default function RoundForm(props: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-line bg-surface p-5 shadow-sm">
-      <h2 className="text-lg font-semibold">{props.mode === 'create' ? 'Neue Runde' : 'Runde bearbeiten'}</h2>
+    <form onSubmit={handleSubmit} className="card space-y-5 p-5">
+      <h2 className="text-h2">{props.mode === 'create' ? 'Neue Runde' : 'Runde bearbeiten'}</h2>
 
       <label className="block space-y-1">
-        <span className="text-sm font-medium">Titel</span>
+        <span className="text-label">Titel</span>
         <input
           type="text"
           value={title}
@@ -123,7 +122,7 @@ export default function RoundForm(props: Props) {
 
       <div className="grid grid-cols-2 gap-3">
         <label className="block space-y-1">
-          <span className="text-sm font-medium">Von</span>
+          <span className="text-label">Von</span>
           <input
             type="date"
             value={start}
@@ -134,7 +133,7 @@ export default function RoundForm(props: Props) {
           />
         </label>
         <label className="block space-y-1">
-          <span className="text-sm font-medium">Bis</span>
+          <span className="text-label">Bis</span>
           <input
             type="date"
             value={end}
@@ -145,10 +144,10 @@ export default function RoundForm(props: Props) {
           />
         </label>
       </div>
-      {rangeError && <p className="text-sm text-no">{rangeError}</p>}
+      {rangeError && <p className="text-sm text-no-ink">{rangeError}</p>}
 
       <label className="block space-y-1">
-        <span className="text-sm font-medium">Gruppengröße (optional)</span>
+        <span className="text-label">Gruppengröße (optional)</span>
         <input
           type="number"
           inputMode="numeric"
@@ -160,12 +159,12 @@ export default function RoundForm(props: Props) {
           className={inputClass}
         />
       </label>
-      {headcountError && <p className="text-sm text-no">{headcountError}</p>}
+      {headcountError && <p className="text-sm text-no-ink">{headcountError}</p>}
 
       {rangeValid && (
         <div className="space-y-2">
           <div>
-            <p className="text-sm font-medium">Gesperrte Tage (optional)</p>
+            <p className="text-label">Gesperrte Tage (optional)</p>
             <p className="text-sm text-muted">
               Tipp Tage an, die nicht in Frage kommen. Nochmal tippen hebt die Sperre auf.
               {excludedInRange.length > 0 && ` ${excludedInRange.length} gesperrt.`}
@@ -176,8 +175,8 @@ export default function RoundForm(props: Props) {
       )}
 
       {hidden && hidden.people > 0 && (
-        <div role="status" className="rounded-xl border border-maybe/50 bg-maybe-soft p-4 text-sm text-ink">
-          <p className="font-medium">⚠ Eingetragene Tage fallen raus</p>
+        <div role="status" className="rounded-[var(--r-md)] bg-maybe-soft p-4 text-sm text-ink">
+          <p className="font-semibold text-maybe-ink">⚠ Eingetragene Tage fallen raus</p>
           <p className="mt-1">
             {hidden.people === 1 ? '1 Person hat' : `${hidden.people} Personen haben`} an{' '}
             {hidden.days === 1
@@ -189,20 +188,20 @@ export default function RoundForm(props: Props) {
         </div>
       )}
 
-      {error && <p className="text-sm text-no">{error}</p>}
+      {error && <p className="text-sm text-no-ink">{error}</p>}
 
       <div className="flex gap-3">
         <button
           type="button"
           onClick={props.onCancel}
-          className="flex-1 rounded-lg border border-faint/50 px-4 py-2.5 font-medium hover:bg-paper"
+          className="btn btn-secondary flex-1"
         >
           Abbrechen
         </button>
         <button
           type="submit"
           disabled={busy || !title.trim() || !rangeValid || Boolean(headcountError)}
-          className="flex-1 rounded-lg bg-accent px-4 py-2.5 font-medium text-on-accent disabled:opacity-50"
+          className="btn btn-primary flex-1"
         >
           {props.mode === 'create' ? (busy ? 'Lege an…' : 'Runde anlegen') : busy ? 'Speichere…' : 'Speichern'}
         </button>

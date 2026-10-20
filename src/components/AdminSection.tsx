@@ -32,27 +32,27 @@ export default function AdminSection({ groupSlug, groupName, members, userId }: 
   }
 
   return (
-    <section aria-label="Admin" className="space-y-4 border-t border-line pt-6">
-      <div>
-        <h2 className="text-sm font-medium text-muted">Mitglieder & Admins</h2>
+    <section aria-label="Admin" className="space-y-3 border-t border-line pt-6">
+      <div className="space-y-0.5">
+        <h2 className="text-label">Mitglieder & Admins</h2>
         <p className="text-xs text-muted">
           Admins dürfen Runden aller Personen löschen, Admins ernennen und entziehen und die Gruppe löschen.
         </p>
       </div>
 
-      <ul className="divide-y divide-line rounded-2xl border border-line bg-surface">
+      <ul className="card divide-y divide-line overflow-hidden">
         {members.map((m) => {
           const isAdmin = m.role === 'admin'
           const lastAdmin = isAdmin && adminCount <= 1
           return (
-            <li key={m.id} className="flex items-center gap-3 px-4 py-3">
+            <li key={m.id} className="flex min-h-14 items-center gap-3 px-4 py-2.5">
               <Avatar member={m} size={36} />
               <div className="min-w-0 flex-1">
-                <p className="truncate font-medium">
+                <p className="truncate font-semibold">
                   {m.name}
-                  {m.user_id === userId && <span className="text-muted"> (du)</span>}
+                  {m.user_id === userId && <span className="font-normal text-muted"> (du)</span>}
                 </p>
-                <p className="text-xs text-muted">
+                <p className={`text-xs ${isAdmin ? 'font-semibold text-accent' : 'text-muted'}`}>
                   {isAdmin ? (lastAdmin ? 'Admin (einziger)' : 'Admin') : 'Mitglied'}
                 </p>
               </div>
@@ -61,7 +61,7 @@ export default function AdminSection({ groupSlug, groupName, members, userId }: 
                   type="button"
                   onClick={() => void setRole(m, isAdmin ? 'member' : 'admin')}
                   disabled={busyId !== null}
-                  className="shrink-0 rounded-lg border border-faint/50 px-3 py-1.5 text-sm font-medium hover:bg-paper disabled:opacity-50"
+                  className="btn btn-secondary shrink-0 px-3 text-sm"
                 >
                   {busyId === m.user_id ? '…' : isAdmin ? 'Admin entziehen' : 'Zum Admin machen'}
                 </button>
@@ -70,7 +70,7 @@ export default function AdminSection({ groupSlug, groupName, members, userId }: 
           )
         })}
       </ul>
-      {error && <p className="text-sm text-no">{error}</p>}
+      {error && <p className="text-sm text-no-ink">{error}</p>}
 
       <DeleteGroup groupSlug={groupSlug} groupName={groupName} />
     </section>
@@ -98,7 +98,7 @@ function DeleteGroup({ groupSlug, groupName }: { groupSlug: string; groupName: s
   if (!confirming) {
     return (
       <div className="text-center">
-        <button type="button" onClick={() => setConfirming(true)} className="text-sm text-no underline">
+        <button type="button" onClick={() => setConfirming(true)} className="btn btn-danger text-sm">
           Gruppe löschen
         </button>
       </div>
@@ -106,17 +106,17 @@ function DeleteGroup({ groupSlug, groupName }: { groupSlug: string; groupName: s
   }
 
   return (
-    <div className="space-y-3 rounded-xl border border-no/30 bg-no-soft p-4">
+    <div className="card space-y-3 border-no/30 bg-no-soft p-4">
       <p className="text-sm">
         „{groupName}“ wirklich für alle löschen? Alle Runden, Verfügbarkeiten und Mitgliedschaften sind dann weg. Das
         lässt sich nicht rückgängig machen.
       </p>
-      {error && <p className="text-sm text-no">{error}</p>}
+      {error && <p className="text-sm text-no-ink">{error}</p>}
       <div className="flex gap-3">
         <button
           type="button"
           onClick={() => setConfirming(false)}
-          className="flex-1 rounded-lg border border-faint/50 bg-surface px-3 py-2 text-sm font-medium"
+          className="btn btn-secondary flex-1 text-sm"
         >
           Abbrechen
         </button>
@@ -124,7 +124,7 @@ function DeleteGroup({ groupSlug, groupName }: { groupSlug: string; groupName: s
           type="button"
           onClick={handleDelete}
           disabled={busy}
-          className="flex-1 rounded-lg bg-no px-3 py-2 text-sm font-medium text-on-accent disabled:opacity-50"
+          className="btn flex-1 bg-no text-sm text-on-status"
         >
           {busy ? 'Lösche…' : 'Ja, Gruppe löschen'}
         </button>

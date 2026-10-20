@@ -13,21 +13,21 @@ export default function Start() {
   const { groups, loaded, error } = useMyGroups(userId)
 
   return (
-    <main className="mx-auto max-w-md space-y-8 px-4 py-6">
-      <header className="space-y-2">
+    <main className="mx-auto max-w-md space-y-8 px-4 pt-2 pb-8">
+      <header className="space-y-1">
         <h1 className="text-display">Gruppenkalender</h1>
         <p className="text-muted">Termin mit Freunden finden.</p>
       </header>
 
       <section aria-label="Deine Gruppen" className="space-y-3">
         <h2 className="text-label">Deine Gruppen</h2>
-        {error && <p className="text-sm text-no">Gruppen laden fehlgeschlagen: {error}</p>}
+        {error && <p className="text-sm text-no-ink">Gruppen laden fehlgeschlagen: {error}</p>}
         {!loaded ? (
           <p className="text-muted">Lade Gruppen…</p>
         ) : groups.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-faint/50 p-5 text-center text-sm text-muted">
+          <div className="card p-6 text-center text-sm text-muted">
             <p className="text-3xl">👋</p>
-            <p className="mt-2 font-medium text-ink">Du bist noch in keiner Gruppe</p>
+            <p className="text-h2 mt-2 text-ink">Du bist noch in keiner Gruppe</p>
             <p className="mt-1">
               Leg unten eine neue Gruppe an und teil den Link. Oder lass dir den Link oder Beitritts-Code einer
               bestehenden Gruppe schicken.
@@ -39,9 +39,9 @@ export default function Start() {
               <li key={g.slug}>
                 <Link
                   to={`/g/${g.slug}`}
-                  className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-paper"
+                  className="flex min-h-14 items-center justify-between gap-3 px-4 py-3 hover:bg-paper"
                 >
-                  <span className="min-w-0 truncate font-medium">{g.name}</span>
+                  <span className="min-w-0 truncate font-semibold">{g.name}</span>
                   <span className="shrink-0 text-faint">›</span>
                 </Link>
               </li>
@@ -94,7 +94,7 @@ function JoinByCodeForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <form onSubmit={handleSubmit} className="card space-y-3 p-5">
       <label className="block space-y-1">
         <span className="text-label">Mit Code beitreten</span>
         <input
@@ -113,7 +113,7 @@ function JoinByCodeForm() {
           className="field font-mono tracking-widest"
         />
       </label>
-      {error && <p className="text-sm text-no">{error}</p>}
+      {error && <p className="text-sm text-no-ink">{error}</p>}
       <button
         type="submit"
         disabled={busy || !code.trim()}
@@ -156,7 +156,7 @@ function CreateGroupForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <form onSubmit={handleSubmit} className="card space-y-3 p-5">
       <label className="block space-y-1">
         <span className="text-label">Name der neuen Gruppe</span>
         <input
@@ -169,7 +169,7 @@ function CreateGroupForm() {
           className="field"
         />
       </label>
-      {error && <p className="text-sm text-no">{error}</p>}
+      {error && <p className="text-sm text-no-ink">{error}</p>}
       <button
         type="submit"
         disabled={busy || !name.trim()}

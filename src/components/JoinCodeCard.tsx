@@ -32,19 +32,19 @@ export default function JoinCodeCard({ groupSlug }: { groupSlug: string }) {
     window.setTimeout(() => setCopyState('idle'), 2000)
   }
 
-  if (error) return <p className="text-sm text-no">Beitritts-Code laden fehlgeschlagen: {error}</p>
+  if (error) return <p className="text-sm text-no-ink">Beitritts-Code laden fehlgeschlagen: {error}</p>
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-4 py-3">
+    <div className="flex items-center justify-between gap-3 rounded-[var(--r-md)] bg-surface-2 py-2 pr-2 pl-4">
       <div className="min-w-0">
-        <p className="text-xs text-muted">Beitritts-Code</p>
-        <p className="font-mono text-lg font-semibold tracking-widest">{code ? formatJoinCode(code) : '…'}</p>
+        <p className="text-label">Beitritts-Code</p>
+        <p className="font-mono text-base font-semibold tracking-widest">{code ? formatJoinCode(code) : '…'}</p>
       </div>
       <button
         type="button"
         onClick={handleCopy}
         disabled={!code}
-        className="shrink-0 rounded-lg border border-faint/50 px-3 py-1.5 text-sm font-medium hover:bg-paper disabled:opacity-50"
+        className="btn shrink-0 bg-surface px-3 text-sm text-ink shadow-[var(--shadow-card)]"
       >
         {copyState === 'copied' ? '✓ Kopiert' : copyState === 'failed' ? 'Fehlgeschlagen' : 'Kopieren'}
       </button>

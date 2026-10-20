@@ -50,31 +50,28 @@ export default function RoundsSection({ groupSlug, members, userId }: Props) {
   return (
     <section className="space-y-4" aria-label="Runden">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-medium text-muted">Runden</h2>
-        <button
-          type="button"
-          onClick={() => setCreating(true)}
-          className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-on-accent"
-        >
+        <h2 className="text-label">Runden</h2>
+        <button type="button" onClick={() => setCreating(true)} className="btn btn-secondary px-3 text-sm">
           + Neue Runde
         </button>
       </div>
 
-      {error && <p className="text-sm text-no">Runden laden fehlgeschlagen: {error}</p>}
+      {error && <p className="text-sm text-no-ink">Runden laden fehlgeschlagen: {error}</p>}
 
       {!loaded ? (
         <p className="text-muted">Lade Runden…</p>
       ) : !selected ? (
         <>
           <MemberBar members={members} userId={userId} />
-          <div className="rounded-2xl border border-dashed border-faint/50 p-6 text-center text-muted">
-            Noch keine Runde. Leg die erste an, z.B. für den nächsten Ausflug.
+          <div className="card p-6 text-center text-muted">
+            <p className="text-3xl">🗓️</p>
+            <p className="mt-2">Noch keine Runde. Leg die erste an, z.B. für den nächsten Ausflug.</p>
           </div>
         </>
       ) : (
         <>
           {rounds.length > 1 && (
-            <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+            <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pt-0.5 pb-2">
               {rounds.map((r) => {
                 const active = r.id === selected.id
                 return (
@@ -83,8 +80,10 @@ export default function RoundsSection({ groupSlug, members, userId }: Props) {
                       type="button"
                       onClick={() => select(r.id)}
                       aria-pressed={active}
-                      className={`rounded-xl border px-3 py-2 text-left ${
-                        active ? 'border-accent bg-accent/10' : 'border-line bg-surface hover:bg-paper'
+                      className={`rounded-[var(--r-md)] px-3 py-2 text-left transition-colors ${
+                        active
+                          ? 'bg-accent-soft text-ink ring-2 ring-accent'
+                          : 'bg-surface shadow-[var(--shadow-card)] hover:bg-paper'
                       }`}
                     >
                       <span className="block max-w-40 truncate text-sm font-medium">{r.title}</span>

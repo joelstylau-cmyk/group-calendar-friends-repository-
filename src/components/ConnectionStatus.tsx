@@ -35,7 +35,7 @@ export default function ConnectionStatus() {
   const color = {
     checking: 'text-muted',
     ok: 'text-yes',
-    error: 'text-no',
+    error: 'text-no-ink',
     unconfigured: 'text-maybe',
   }[status]
 

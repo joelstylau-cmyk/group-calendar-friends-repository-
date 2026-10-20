@@ -4,6 +4,7 @@ import type { BlockResult } from '../lib/ranking'
 import { DAY_STATUSES, HATCH, STATUS_META } from '../lib/status'
 import type { DayMap, DayStatus, Round } from '../lib/types'
 import AvailabilityCalendar, { type Brush } from './AvailabilityCalendar'
+import BottomBar from './BottomBar'
 
 interface Props {
   round: Round
@@ -40,38 +41,42 @@ export default function AvailabilitySection({
   }
   const answered = myCounts.yes + myCounts.maybe + myCounts.no
 
+  const actionLabel = answered > 0 ? 'Meine Tage bearbeiten' : 'Meine Tage eintragen'
+
   return (
-    <section className={`space-y-4 ${editing ? 'pb-44' : ''}`} aria-label="Verfügbarkeit">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm">
-          Du: {answered} von {openDays.length} Tagen eingetragen
-          {answered > 0 && (
-            <span className="text-muted">
-              {' '}
-              ({DAY_STATUSES.filter((s) => myCounts[s] > 0)
-                .map((s) => `${myCounts[s]} ${STATUS_META[s].glyph}`)
-                .join(' · ')}
-              )
-            </span>
-          )}
-        </p>
+    <section className="card space-y-4 p-4" aria-label="Verfügbarkeit">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-h2">Kalender</h2>
+          <p className="text-small text-muted">
+            Du: {answered} von {openDays.length} Tagen eingetragen
+            {answered > 0 && (
+              <>
+                {' '}
+                ({DAY_STATUSES.filter((s) => myCounts[s] > 0)
+                  .map((s) => `${myCounts[s]} ${STATUS_META[s].glyph}`)
+                  .join(' · ')}
+                )
+              </>
+            )}
+          </p>
+        </div>
+        {/* Desktop: Aktion direkt am Kalender; mobil sitzt sie in der festen Leiste unten */}
         {!editing && (
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent"
-          >
-            {answered > 0 ? 'Meine Tage bearbeiten' : 'Meine Tage eintragen'}
+          <button type="button" onClick={() => setEditing(true)} className="btn btn-primary hidden md:inline-flex">
+            {actionLabel}
           </button>
         )}
-        <SaveIndicator status={saveStatus} onRetry={onRetry} />
       </div>
 
-      <p className="text-sm text-muted">
-        {editing
-          ? 'Pinsel wählen, dann Tage antippen oder mit dem Finger drüberziehen. Ein Tag mit demselben Wert wird beim Antippen wieder geleert.'
-          : 'Tipp einen Tag an, um zu sehen, wer kann.'}
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+        <p className="text-small text-muted">
+          {editing
+            ? 'Pinsel wählen, dann Tage antippen oder mit dem Finger drüberziehen. Ein Tag mit demselben Wert wird beim Antippen wieder geleert.'
+            : 'Tipp einen Tag an, um zu sehen, wer kann.'}
+        </p>
+        {!editing && <SaveIndicator status={saveStatus} onRetry={onRetry} />}
+      </div>
 
       <AvailabilityCalendar
         start={round.start_date}
@@ -89,7 +94,7 @@ export default function AvailabilitySection({
 
       <Legend editing={editing} />
 
-      {editing && (
+      {editing ? (
         <BrushBar
           brush={brush}
           onBrush={setBrush}
@@ -97,6 +102,12 @@ export default function AvailabilitySection({
           onRetry={onRetry}
           onDone={() => setEditing(false)}
         />
+      ) : (
+        <BottomBar mobileOnly>
+          <button type="button" onClick={() => setEditing(true)} className="btn btn-primary w-full">
+            {actionLabel}
+          </button>
+        </BottomBar>
       )}
     </section>
   )
@@ -106,7 +117,7 @@ function SaveIndicator({ status, onRetry }: { status: SaveStatus; onRetry: () =>
   if (status === 'idle') return null
   if (status === 'error') {
     return (
-      <button type="button" onClick={onRetry} className="text-sm text-no underline">
+      <button type="button" onClick={onRetry} className="text-sm text-no-ink underline">
         Speichern fehlgeschlagen, nochmal versuchen
       </button>
     )
@@ -118,14 +129,15 @@ function SaveIndicator({ status, onRetry }: { status: SaveStatus; onRetry: () =>
   )
 }
 
+// Aktiver Pinsel: gleiche kräftige Farbe wie die gemalten Zellen
 const BRUSHES: { value: Brush; glyph: string; label: string; active: string }[] = [
   ...DAY_STATUSES.map((s) => ({
     value: s,
     glyph: STATUS_META[s].glyph,
     label: STATUS_META[s].label,
-    active: `${STATUS_META[s].cell} ring-2 ring-offset-1 ring-offset-surface ring-current`,
+    active: `${STATUS_META[s].strong} shadow-[var(--shadow-card)]`,
   })),
-  { value: 'clear', glyph: '⌫', label: 'leeren', active: 'border-faint bg-surface-2 ring-2 ring-offset-1 ring-offset-surface ring-muted' },
+  { value: 'clear', glyph: '⌫', label: 'leeren', active: 'bg-ink text-surface shadow-[var(--shadow-card)]' },
 ]
 
 interface BrushBarProps {
@@ -138,12 +150,9 @@ interface BrushBarProps {
 
 function BrushBar({ brush, onBrush, status, onRetry, onDone }: BrushBarProps) {
   return (
-    <div
-      className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-surface/95 px-4 pt-3 shadow-[0_-4px_16px_rgb(0_0_0/0.06)] backdrop-blur"
-      style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)' }}
-    >
-      <div className="mx-auto max-w-md space-y-2">
-        <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Pinsel">
+    <BottomBar>
+      <div className="space-y-2">
+        <div className="segmented grid grid-cols-4" role="radiogroup" aria-label="Pinsel">
           {BRUSHES.map((b) => (
             <button
               key={b.value}
@@ -151,8 +160,8 @@ function BrushBar({ brush, onBrush, status, onRetry, onDone }: BrushBarProps) {
               role="radio"
               aria-checked={brush === b.value}
               onClick={() => onBrush(b.value)}
-              className={`flex flex-col items-center rounded-xl border px-1 py-2 text-xs font-medium ${
-                brush === b.value ? b.active : 'border-line bg-surface text-ink'
+              className={`flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-[10px] text-xs font-semibold transition-colors ${
+                brush === b.value ? b.active : 'text-muted'
               }`}
             >
               <span className="text-lg leading-none font-bold">{b.glyph}</span>
@@ -160,26 +169,22 @@ function BrushBar({ brush, onBrush, status, onRetry, onDone }: BrushBarProps) {
             </button>
           ))}
         </div>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <SaveIndicator status={status} onRetry={onRetry} />
-          <button
-            type="button"
-            onClick={onDone}
-            className="ml-auto rounded-lg bg-accent px-5 py-2 text-sm font-medium text-on-accent"
-          >
+          <button type="button" onClick={onDone} className="btn btn-primary ml-auto px-6">
             Fertig
           </button>
         </div>
       </div>
-    </div>
+    </BottomBar>
   )
 }
 
 function Legend({ editing }: { editing: boolean }) {
   return (
-    <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+    <ul className="flex flex-wrap gap-x-4 gap-y-1.5 border-t border-line pt-3 text-xs text-muted">
       <li className="flex items-center gap-1.5">
-        <span className="flex h-1.5 w-8 overflow-hidden rounded-full bg-line">
+        <span className="flex h-1.5 w-8 overflow-hidden rounded-full bg-faint/30">
           <span className={`w-1/2 ${STATUS_META.yes.swatch}`} />
           <span className={`w-1/4 ${STATUS_META.maybe.swatch}`} />
           <span className={`w-1/8 ${STATUS_META.no.swatch}`} />
@@ -187,7 +192,7 @@ function Legend({ editing }: { editing: boolean }) {
         Balken: kann / vielleicht / keine Zeit / grau = offen
       </li>
       <li className="flex items-center gap-1.5">
-        <span className="text-[11px] font-semibold text-yes">3</span> so viele können
+        <span className="text-[11px] font-bold text-yes-ink">3</span> so viele können
       </li>
       <li className="flex items-center gap-1.5">
         <span className="text-[11px] font-bold">

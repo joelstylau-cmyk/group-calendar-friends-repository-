@@ -48,7 +48,7 @@ export default function BlockSheet({ result, membersById, userId, onClose }: Pro
         <div className="sheet-grabber" aria-hidden="true" />
         <header className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <h2 id="sheet-title" className="text-lg font-semibold">
+            <h2 id="sheet-title" className="text-h2">
               {formatDays(result.days)}
             </h2>
             {multi && (
@@ -74,7 +74,7 @@ export default function BlockSheet({ result, membersById, userId, onClose }: Pro
                 {g.title} ({g.ids.length})
               </h3>
               {g.ids.length === 0 ? (
-                <p className="text-sm text-faint">niemand</p>
+                <p className="text-sm text-muted">niemand</p>
               ) : (
                 <ul className="space-y-1.5">
                   {g.ids.map((id) => {

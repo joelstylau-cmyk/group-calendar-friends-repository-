@@ -75,7 +75,7 @@ export default function Group() {
     return (
       <CenteredMessage>
         <h1 className="text-xl font-semibold">Da ist was schiefgelaufen</h1>
-        <p className="text-sm text-no">{state.message}</p>
+        <p className="text-sm text-no-ink">{state.message}</p>
       </CenteredMessage>
     )
   }
@@ -98,16 +98,18 @@ function GroupView({ group, onMembershipLost }: { group: GroupRow; onMembershipL
   }, [loaded, isMember, onMembershipLost])
 
   return (
-    <main className="mx-auto max-w-md space-y-6 px-4 py-6">
-      <Link to="/" className="inline-block text-sm text-accent">
-        ‹ Deine Gruppen
-      </Link>
-      <header className="flex items-start justify-between gap-3">
-        <h1 className="text-2xl font-bold break-words">{group.name}</h1>
-        <ShareButton url={window.location.href} />
+    <main className="mx-auto max-w-md space-y-6 px-4 pt-2 pb-8">
+      <header className="space-y-3">
+        <Link to="/" className="-ml-1 inline-flex min-h-9 items-center rounded-full px-1 text-small text-muted hover:text-ink">
+          ‹ Deine Gruppen
+        </Link>
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="text-display break-words">{group.name}</h1>
+          <ShareButton url={window.location.href} />
+        </div>
       </header>
 
-      {error && <p className="text-sm text-no">Mitglieder laden fehlgeschlagen: {error}</p>}
+      {error && <p className="text-sm text-no-ink">Mitglieder laden fehlgeschlagen: {error}</p>}
 
       {!loaded ? (
         <p className="text-muted">Lade Mitglieder…</p>
@@ -162,7 +164,7 @@ function LeaveGroup({ groupSlug, groupName, members, userId }: LeaveGroupProps) 
   if (!confirming) {
     return (
       <div className="border-t border-line pt-6 text-center">
-        <button type="button" onClick={() => setConfirming(true)} className="text-sm text-no underline">
+        <button type="button" onClick={() => setConfirming(true)} className="btn btn-danger text-sm">
           Gruppe verlassen
         </button>
       </div>
@@ -170,7 +172,7 @@ function LeaveGroup({ groupSlug, groupName, members, userId }: LeaveGroupProps) 
   }
 
   return (
-    <div className="space-y-3 rounded-xl border border-no/30 bg-no-soft p-4">
+    <div className="card space-y-3 border-no/30 bg-no-soft p-4">
       {others.length === 0 ? (
         <p className="text-sm">
           „{groupName}“ wirklich verlassen? Du bist das letzte Mitglied, die Gruppe wird dann mit allen Runden
@@ -183,12 +185,12 @@ function LeaveGroup({ groupSlug, groupName, members, userId }: LeaveGroupProps) 
           {successor && ` Da sonst niemand Admin ist, wird ${successor.name} neuer Admin.`}
         </p>
       )}
-      {error && <p className="text-sm text-no">{error}</p>}
+      {error && <p className="text-sm text-no-ink">{error}</p>}
       <div className="flex gap-3">
         <button
           type="button"
           onClick={() => setConfirming(false)}
-          className="flex-1 rounded-lg border border-faint/50 bg-surface px-3 py-2 text-sm font-medium"
+          className="btn btn-secondary flex-1 text-sm"
         >
           Abbrechen
         </button>
@@ -196,7 +198,7 @@ function LeaveGroup({ groupSlug, groupName, members, userId }: LeaveGroupProps) 
           type="button"
           onClick={handleLeave}
           disabled={busy}
-          className="flex-1 rounded-lg bg-no px-3 py-2 text-sm font-medium text-on-accent disabled:opacity-50"
+          className="btn flex-1 bg-no text-sm text-on-status"
         >
           {busy ? 'Verlasse…' : 'Ja, verlassen'}
         </button>

@@ -1,30 +1,35 @@
 import type { DayStatus } from './types'
 
 // Zustandsfarben immer mit Glyph, nie nur über Farbe (SPEC: Design-Richtung).
+// text = Schrift (abgedunkelt für Kontrast), swatch = Balken/Punkte,
+// soft = zarte Fläche, strong = kräftige Fläche (eigener Eintrag im Malmodus).
 export const STATUS_META: Record<
   DayStatus,
-  { glyph: string; label: string; cell: string; swatch: string; text: string }
+  { glyph: string; label: string; soft: string; strong: string; swatch: string; text: string }
 > = {
   yes: {
     glyph: '✓',
     label: 'kann',
-    cell: 'border-yes/50 bg-yes-soft text-ink',
+    soft: 'bg-yes-soft text-ink',
+    strong: 'bg-yes text-on-status',
     swatch: 'bg-yes',
-    text: 'text-yes',
+    text: 'text-yes-ink',
   },
   maybe: {
     glyph: '~',
     label: 'vielleicht',
-    cell: 'border-maybe/50 bg-maybe-soft text-ink',
+    soft: 'bg-maybe-soft text-ink',
+    strong: 'bg-maybe text-on-status',
     swatch: 'bg-maybe',
-    text: 'text-maybe',
+    text: 'text-maybe-ink',
   },
   no: {
     glyph: '✗',
     label: 'keine Zeit',
-    cell: 'border-no/50 bg-no-soft text-ink',
+    soft: 'bg-no-soft text-ink',
+    strong: 'bg-no text-on-status',
     swatch: 'bg-no',
-    text: 'text-no',
+    text: 'text-no-ink',
   },
 }
 

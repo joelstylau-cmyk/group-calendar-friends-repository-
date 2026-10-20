@@ -24,7 +24,7 @@ interface Props {
   onDayTap: (iso: string) => void
 }
 
-const cellBase = 'relative flex aspect-square w-full items-center justify-center rounded-lg border text-sm'
+const cellBase = 'relative flex aspect-square w-full items-center justify-center rounded-[10px] text-sm'
 
 export default function AvailabilityCalendar({
   start,
@@ -93,12 +93,12 @@ export default function AvailabilityCalendar({
         renderDay={(iso, inWindow) => {
           const day = dayOfMonth(iso)
           if (!inWindow) {
-            return <span className={`${cellBase} border-transparent text-faint/60`}>{day}</span>
+            return <span className={`${cellBase} text-faint/50`}>{day}</span>
           }
           if (excludedSet.has(iso)) {
             return (
               <span
-                className={`${cellBase} border-transparent bg-surface-2 text-faint line-through`}
+                className={`${cellBase} bg-surface-2/60 text-faint line-through`}
                 style={{ backgroundImage: HATCH }}
                 aria-label={`${iso}, gesperrt`}
               >
@@ -114,25 +114,30 @@ export default function AvailabilityCalendar({
           const label =
             `${iso}: ${yes} ${yes === 1 ? 'kann' : 'können'}, ${stats?.maybe.length ?? 0} vielleicht, ` +
             `${stats?.no.length ?? 0} keine Zeit; du: ${meta ? meta.label : 'keine Angabe'}`
-          // Im Edit-Modus zeigt die Zellfarbe meinen Eintrag, sonst steht die Gruppe im Vordergrund.
-          const surface = editing && meta ? meta.cell : 'border-line bg-surface'
-          const ring = !editing && highlight.has(iso) ? 'ring-2 ring-accent ring-offset-1 ring-offset-paper' : ''
-          const className = `${cellBase} font-medium ${surface} ${ring} cursor-pointer`
+          // Im Edit-Modus zeigt die Zellfarbe kräftig meinen Eintrag, sonst steht die Gruppe im Vordergrund.
+          const strong = editing && meta
+          const surface = strong ? meta.strong : 'bg-surface-2 text-ink'
+          const ring = !editing && highlight.has(iso) ? 'ring-2 ring-accent ring-offset-2 ring-offset-surface' : ''
+          const className = `${cellBase} font-semibold ${surface} ${ring} cursor-pointer transition-colors`
 
           const content = (
             <>
-              {yes > 0 && (
-                <span className="absolute top-0.5 left-1 text-[10px] leading-none font-semibold text-yes">
-                  {yes}
-                </span>
-              )}
               {meta && (
-                <span className={`absolute top-0.5 right-1 text-[10px] leading-none font-bold ${meta.text}`}>
+                <span
+                  className={`absolute top-1 left-1.5 text-[11px] leading-none font-bold ${strong ? '' : meta.text}`}
+                >
                   {meta.glyph}
                 </span>
               )}
-              <span className="-mt-1">{day}</span>
-              {stats && total > 0 && <DayBar stats={stats} total={total} />}
+              {yes > 0 && (
+                <span
+                  className={`absolute top-1 right-1.5 text-[11px] leading-none font-bold ${strong ? 'opacity-80' : 'text-yes-ink'}`}
+                >
+                  {yes}
+                </span>
+              )}
+              <span className="-mt-0.5 text-[15px]">{day}</span>
+              {stats && total > 0 && <DayBar stats={stats} total={total} onStrong={Boolean(strong)} />}
             </>
           )
 
@@ -164,9 +169,11 @@ export default function AvailabilityCalendar({
 }
 
 // Gestapelter Mini-Balken: Anteil kann / vielleicht / keine Zeit, Rest grau = keine Antwort
-function DayBar({ stats, total }: { stats: BlockResult; total: number }) {
+function DayBar({ stats, total, onStrong }: { stats: BlockResult; total: number; onStrong: boolean }) {
   return (
-    <span className="absolute inset-x-1.5 bottom-1 flex h-1 overflow-hidden rounded-full bg-line">
+    <span
+      className={`absolute inset-x-1.5 bottom-1.5 flex h-1 overflow-hidden rounded-full ${onStrong ? 'bg-surface/50' : 'bg-faint/30'}`}
+    >
       {DAY_STATUSES.map((s) => {
         const n = stats[s].length
         return n > 0 ? (

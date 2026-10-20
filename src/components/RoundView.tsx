@@ -76,19 +76,19 @@ export default function RoundView({ round, members, userId, onDeleted, onEdited 
     <article className="space-y-6">
       <header className="space-y-1">
         <div className="flex items-start justify-between gap-3">
-          <h2 className="text-xl font-semibold break-words">{round.title}</h2>
+          <h2 className="font-display text-[22px] leading-tight font-bold break-words">{round.title}</h2>
           {canManage && (
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="shrink-0 rounded-lg border border-faint/50 px-3 py-1.5 text-sm font-medium hover:bg-paper"
+              className="btn btn-secondary shrink-0 px-3 text-sm"
             >
               Bearbeiten
             </button>
           )}
         </div>
-        <p className="text-ink">{formatRange(round.start_date, round.end_date)}</p>
-        <p className="text-sm text-muted">
+        <p className="font-semibold text-ink">{formatRange(round.start_date, round.end_date)}</p>
+        <p className="text-small text-muted">
           {days} {days === 1 ? 'Tag' : 'Tage'}
           {excluded.size > 0 && `, davon ${excluded.size} gesperrt`}
           {round.headcount !== null && ` · Gruppengröße ${round.headcount}`}
@@ -103,7 +103,7 @@ export default function RoundView({ round, members, userId, onDeleted, onEdited 
         target={round.headcount ?? members.length}
       />
 
-      {error && <p className="text-sm text-no">Verfügbarkeiten laden fehlgeschlagen: {error}</p>}
+      {error && <p className="text-sm text-no-ink">Verfügbarkeiten laden fehlgeschlagen: {error}</p>}
 
       {!loaded || !draft.ready ? (
         <p className="text-muted">Lade Verfügbarkeiten…</p>
@@ -166,35 +166,29 @@ function DeleteRound({ roundId, onDeleted }: { roundId: string; onDeleted: () =>
 
   if (!confirming) {
     return (
-      <button
-        type="button"
-        onClick={() => setConfirming(true)}
-        className="text-sm text-no underline"
-      >
-        Runde löschen
-      </button>
+      <div className="text-center">
+        <button type="button" onClick={() => setConfirming(true)} className="btn btn-danger text-sm">
+          Runde löschen
+        </button>
+      </div>
     )
   }
 
   return (
-    <div className="space-y-3 rounded-xl border border-no/30 bg-no-soft p-4">
+    <div className="card space-y-3 border-no/30 bg-no-soft p-4">
       <p className="text-sm">
         Runde wirklich löschen? Alle eingetragenen Verfügbarkeiten gehen dabei verloren.
       </p>
-      {error && <p className="text-sm text-no">{error}</p>}
+      {error && <p className="text-sm text-no-ink">{error}</p>}
       <div className="flex gap-3">
-        <button
-          type="button"
-          onClick={() => setConfirming(false)}
-          className="flex-1 rounded-lg border border-faint/50 bg-surface px-3 py-2 text-sm font-medium"
-        >
+        <button type="button" onClick={() => setConfirming(false)} className="btn btn-secondary flex-1 text-sm">
           Abbrechen
         </button>
         <button
           type="button"
           onClick={handleDelete}
           disabled={busy}
-          className="flex-1 rounded-lg bg-no px-3 py-2 text-sm font-medium text-on-accent disabled:opacity-50"
+          className="btn flex-1 bg-no text-sm text-on-status"
         >
           {busy ? 'Lösche…' : 'Ja, löschen'}
         </button>

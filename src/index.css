@@ -25,6 +25,14 @@
   --no: #ec5a72;
   --no-soft: #fbdde2;
 
+  /* Status als Schrift auf hellem Grund: abgedunkelt für genug Kontrast (ca. 5:1 auf Weiß).
+     Im Dunkelmodus reichen die Originaltöne. */
+  --yes-ink: color-mix(in srgb, var(--yes) 60%, var(--ink));
+  --maybe-ink: color-mix(in srgb, var(--maybe) 55%, var(--ink));
+  --no-ink: color-mix(in srgb, var(--no) 70%, var(--ink));
+  /* Schrift auf kräftigen Status-Flächen (Malmodus) */
+  --on-status: #1e2030;
+
   --r-sm: 10px;
   --r-md: 14px;
   --r-lg: 20px;
@@ -55,6 +63,10 @@
     --maybe-soft: rgba(241, 189, 88, 0.16);
     --no: #ff6f88;
     --no-soft: rgba(255, 111, 136, 0.16);
+    --yes-ink: var(--yes);
+    --maybe-ink: var(--maybe);
+    --no-ink: var(--no);
+    --on-status: #15161f;
 
     --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 0 0 1px rgb(255 255 255 / 0.03);
     --shadow-raised: 0 8px 28px rgb(0 0 0 / 0.5), 0 2px 6px rgb(0 0 0 / 0.3);
@@ -81,6 +93,10 @@
   --maybe-soft: rgba(241, 189, 88, 0.16);
   --no: #ff6f88;
   --no-soft: rgba(255, 111, 136, 0.16);
+  --yes-ink: var(--yes);
+  --maybe-ink: var(--maybe);
+  --no-ink: var(--no);
+  --on-status: #15161f;
 
   --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 0 0 1px rgb(255 255 255 / 0.03);
   --shadow-raised: 0 8px 28px rgb(0 0 0 / 0.5), 0 2px 6px rgb(0 0 0 / 0.3);
@@ -104,6 +120,10 @@
   --color-maybe-soft: var(--maybe-soft);
   --color-no: var(--no);
   --color-no-soft: var(--no-soft);
+  --color-yes-ink: var(--yes-ink);
+  --color-maybe-ink: var(--maybe-ink);
+  --color-no-ink: var(--no-ink);
+  --color-on-status: var(--on-status);
 
   --font-sans: "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display: "Bricolage Grotesque", "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
@@ -124,6 +144,10 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Oben Notch, unten Home-Indicator bzw. Platz für die feste Aktionsleiste
+       (--bottom-bar-space setzt BottomBar mit der gemessenen Leistenhöhe). */
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--bottom-bar-space, 0px));
   }
 
   h1,
@@ -209,7 +233,7 @@
   /* Destruktiv: dezent, Text in --no, nicht knallrot */
   .btn-danger {
     background-color: transparent;
-    color: var(--no);
+    color: var(--no-ink);
   }
   .btn-danger:hover:not(:disabled) {
     background-color: var(--no-soft);

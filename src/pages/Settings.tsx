@@ -168,7 +168,7 @@ function SettingsForm() {
             {busy ? 'Speichere…' : 'Speichern'}
           </button>
           {message && (
-            <span className={`text-sm ${message.kind === 'ok' ? 'text-yes' : 'text-no'}`} aria-live="polite">
+            <span className={`text-sm ${message.kind === 'ok' ? 'text-yes' : 'text-no-ink'}`} aria-live="polite">
               {message.text}
             </span>
           )}
@@ -192,7 +192,7 @@ function SettingsForm() {
           ))}
         </div>
         <p className="text-small text-muted">„Automatisch“ folgt der Einstellung deines Geräts. Gilt auf allen deinen Geräten.</p>
-        {themeError && <p className="text-sm text-no">{themeError}</p>}
+        {themeError && <p className="text-sm text-no-ink">{themeError}</p>}
       </section>
 
       <section className="card space-y-3 p-5">

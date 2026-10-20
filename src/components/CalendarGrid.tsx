@@ -14,10 +14,10 @@ export default function CalendarGrid({ start, end, renderDay }: Props) {
     <div className="space-y-6">
       {monthsInRange(start, end).map(({ year, month }) => (
         <section key={`${year}-${month}`}>
-          <h3 className="mb-2 font-semibold">{formatMonth(year, month)}</h3>
-          <div className="grid grid-cols-7 gap-1 text-center">
+          <h3 className="mb-3 font-display text-[15px] font-bold">{formatMonth(year, month)}</h3>
+          <div className="grid grid-cols-7 gap-1.5 text-center">
             {WEEKDAYS.map((w) => (
-              <div key={w} className="pb-1 text-xs font-medium text-muted">
+              <div key={w} className="pb-1 text-[11px] font-semibold text-muted">
                 {w}
               </div>
             ))}

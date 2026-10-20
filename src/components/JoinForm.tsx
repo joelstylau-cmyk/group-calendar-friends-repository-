@@ -33,9 +33,9 @@ export default function JoinForm({ groupSlug, groupName, onJoined }: Props) {
   }
 
   return (
-    <div className="space-y-5 rounded-2xl border border-line bg-surface p-5 shadow-sm">
+    <div className="card space-y-5 p-5">
       <div>
-        <h2 className="text-lg font-semibold">Willkommen bei „{groupName}“</h2>
+        <h2 className="text-h2">Willkommen bei „{groupName}“</h2>
         <p className="text-sm text-muted">Du trittst so bei:</p>
       </div>
 
@@ -49,13 +49,13 @@ export default function JoinForm({ groupSlug, groupName, onJoined }: Props) {
         </div>
       </div>
 
-      {error && <p className="text-sm text-no">{error}</p>}
+      {error && <p className="text-sm text-no-ink">{error}</p>}
 
       <button
         type="button"
         onClick={handleJoin}
         disabled={busy}
-        className="w-full rounded-lg bg-accent px-4 py-2.5 font-medium text-on-accent disabled:opacity-50"
+        className="btn btn-primary w-full"
       >
         {busy ? 'Trete bei…' : 'Beitreten'}
       </button>

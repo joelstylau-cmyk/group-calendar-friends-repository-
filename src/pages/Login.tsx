@@ -33,7 +33,7 @@ export default function Login() {
         {busy ? 'Weiterleitung zu Google…' : 'Mit Google anmelden'}
       </button>
 
-      {error && <p className="text-sm text-no">{error}</p>}
+      {error && <p className="text-sm text-no-ink">{error}</p>}
     </main>
   )
 }

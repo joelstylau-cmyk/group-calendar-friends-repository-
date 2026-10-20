@@ -156,7 +156,7 @@ create table availability (
 - Mobile-first, sauber, bewusst nicht wie when2meet.
 - Akzent Periwinkle (#5b6cff), Zustandsfarben grün / amber / rose, jeweils mit Glyph (✓ ~ ✗), nie nur über Farbe.
 - Fonts: Bricolage Grotesque (Display) und Hanken Grotesk (Body) via Google Fonts.
-- Verbindlicher Bauplan für das Aussehen: `DESIGN.md` (Tokens, Typo, Komponenten, Phasen). Phase 1 (Fundament) erledigt: Tokens als CSS-Variablen in `src/index.css`, als Tailwind-Farben nutzbar (`bg-surface`, `text-muted`, …); keine festen Farben in Komponenten (Ausnahme: persönliche Mitgliedsfarben und Google-Logo).
+- Verbindlicher Bauplan für das Aussehen: `DESIGN.md` (Tokens, Typo, Komponenten, Phasen). Phase 1 (Fundament) erledigt: Tokens als CSS-Variablen in `src/index.css`, als Tailwind-Farben nutzbar (`bg-surface`, `text-muted`, …); keine festen Farben in Komponenten (Ausnahme: persönliche Mitgliedsfarben und Google-Logo). Phase 2 (Hauptscreens) erledigt: Hierarchie Hero > Kalender > Vorschläge > Rest leise; Status-Schrift über `--yes-ink`/`--maybe-ink`/`--no-ink` (auf hellem Grund abgedunkelt für Kontrast); feste Aktionsleiste unten (`BottomBar`, misst ihre Höhe und reserviert per `--bottom-bar-space` Platz am Seitenende, inkl. Safe-Area), „Meine Tage eintragen“ mobil in der Leiste, ab `md` am Kalender.
 - Hell/Dunkel/Automatisch: Wahl in den Settings, gespeichert in `profiles.theme`, lokal gespiegelt (`localStorage` `gk-theme`); ein Inline-Skript in `index.html` setzt `data-theme` vor dem ersten Rendern. `system` = kein Attribut, dann gilt `prefers-color-scheme`.
 - Safe-Area auf Mobile beachten.
 - Eine mutige Stelle (der Kalender), der Rest ruhig.
