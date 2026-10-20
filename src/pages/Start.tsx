@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import ConnectionStatus from '../components/ConnectionStatus'
 import { useMyGroups } from '../hooks/useMyGroups'
 import { useUser } from '../lib/auth'
-import { checkJoinCode, normalizeJoinCode } from '../lib/joinCode'
+import { checkJoinCode, JOIN_CODE_RATE_LIMITED, normalizeJoinCode } from '../lib/joinCode'
 import { createSlug } from '../lib/slug'
 import { getSupabase, UNIQUE_VIOLATION } from '../lib/supabase'
 
@@ -78,7 +78,10 @@ function JoinByCodeForm() {
     // Tritt bei oder bleibt Mitglied, wenn man es schon ist (siehe 004_join_code.sql).
     const { data, error } = await getSupabase().rpc('join_group_by_code', { p_code: normalized })
     if (error) {
-      setError(`Beitreten hat nicht geklappt: ${error.message}`)
+      // Sperre nach zu vielen Fehlversuchen: Meldung ist schon fertig formuliert.
+      setError(
+        error.code === JOIN_CODE_RATE_LIMITED ? error.message : `Beitreten hat nicht geklappt: ${error.message}`,
+      )
       setBusy(false)
       return
     }

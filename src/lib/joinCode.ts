@@ -3,6 +3,9 @@
 export const JOIN_CODE_ALPHABET = '34679AFHKRTXY'
 export const JOIN_CODE_LENGTH = 8
 
+// Fehlercode von join_group_by_code nach zu vielen falschen Codes (005_join_code_ratelimit.sql)
+export const JOIN_CODE_RATE_LIMITED = 'PT429'
+
 // Eingabe vereinheitlichen: Großbuchstaben, ohne Bindestriche und Leerzeichen.
 export function normalizeJoinCode(input: string): string {
   return input.toUpperCase().replace(/[^0-9A-Z]/g, '')
