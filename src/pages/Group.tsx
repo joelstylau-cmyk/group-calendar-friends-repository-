@@ -88,6 +88,7 @@ function GroupView({ group, onMembershipLost }: { group: GroupRow; onMembershipL
   const isMember = Boolean(me)
   const [sheet, setSheet] = useState<'share' | 'manage' | null>(null)
   const closeSheet = useCallback(() => setSheet(null), [])
+  const [groupName, setGroupName] = useLiveGroupName(group.slug, group.name)
 
   // Eben noch Mitglied, jetzt nicht mehr (Gruppe von einem Admin gelöscht, oder entfernt):
   // Gruppe neu nachschlagen, damit statt des Beitreten-Formulars die passende Seite kommt.
@@ -105,7 +106,7 @@ function GroupView({ group, onMembershipLost }: { group: GroupRow; onMembershipL
           ‹ Deine Gruppen
         </Link>
         <div className="flex items-start justify-between gap-3">
-          <h1 className="text-display min-w-0 break-words">{group.name}</h1>
+          <h1 className="text-display min-w-0 break-words">{groupName}</h1>
           {isMember && (
             <div className="flex shrink-0 items-center gap-2">
               <button type="button" onClick={() => setSheet('share')} className="btn btn-outline px-4 text-sm">
@@ -132,23 +133,46 @@ function GroupView({ group, onMembershipLost }: { group: GroupRow; onMembershipL
       ) : isMember ? (
         <RoundsSection groupSlug={group.slug} members={members} userId={userId} />
       ) : (
-        <JoinForm groupSlug={group.slug} groupName={group.name} onJoined={reload} />
+        <JoinForm groupSlug={group.slug} groupName={groupName} onJoined={reload} />
       )}
 
       {isMember && sheet === 'share' && (
-        <ShareSheet groupSlug={group.slug} groupName={group.name} url={window.location.href} onClose={closeSheet} />
+        <ShareSheet groupSlug={group.slug} groupName={groupName} url={window.location.href} onClose={closeSheet} />
       )}
       {isMember && sheet === 'manage' && (
         <ManageGroupSheet
           groupSlug={group.slug}
-          groupName={group.name}
+          groupName={groupName}
           members={members}
           userId={userId}
+          onRenamed={setGroupName}
           onClose={closeSheet}
         />
       )}
     </main>
   )
+}
+
+// Gruppenname live: Umbenennen (rename_group, 008) kommt per Realtime bei allen offenen Seiten an.
+// RLS (groups_select) lässt dabei nur Mitglieder die Änderung sehen.
+function useLiveGroupName(slug: string, initial: string) {
+  const [name, setName] = useState(initial)
+
+  useEffect(() => {
+    const supabase = getSupabase()
+    const channel = supabase
+      .channel(`groups:${slug}:${Math.random().toString(36).slice(2)}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'groups', filter: `slug=eq.${slug}` }, (payload) => {
+        const next = (payload.new as { name?: string }).name
+        if (next) setName(next)
+      })
+      .subscribe()
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [slug])
+
+  return [name, setName] as const
 }
 
 function GearIcon() {

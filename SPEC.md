@@ -36,13 +36,13 @@ Mobile-first Web-App, mit der Freundesgruppen pro Event einen Termin finden. Log
 - Admin: Rolle `members.role = 'admin'`, ausgewertet ausschließlich in der Funktion `is_group_admin(group_slug)`. Ändert sich später, was Admin bedeutet, wird nur diese Funktion angepasst, die Policies bleiben. Regeln (006):
   - Der Ersteller wird beim Anlegen per Trigger Admin-Mitglied.
   - Admins sind gleichberechtigt: jeder Admin macht Mitglieder zu Admins und stuft Admins herab, nur den letzten Admin nicht. Einziger Weg dafür ist `set_member_role` (prüft per `auth.uid()`, ob der Aufrufer Admin ist); `members` ist per Client nicht änderbar, Beitreten erzwingt `role = 'member'`.
-  - Jeder Admin darf die Gruppe über `delete_group` löschen (Runden, Mitgliedschaften, Verfügbarkeiten per Cascade). `groups` ist per Client weder änderbar noch löschbar.
+  - Jeder Admin darf die Gruppe über `delete_group` löschen (Runden, Mitgliedschaften, Verfügbarkeiten per Cascade) und über `rename_group` umbenennen (1 bis 60 Zeichen, 008; im „Gruppe verwalten“-Sheet, andere Mitglieder sehen den neuen Namen live). Link und Beitritts-Code bleiben dabei gleich. `groups` ist per Client weder änderbar noch löschbar.
   - Nach jedem Austritt (Trigger auf `members`, sperrt die Gruppenzeile): letztes Mitglied weg → Gruppe wird gelöscht; letzter Admin weg → ältestes verbliebenes Mitglied wird Admin. Es gibt also nie eine Gruppe ohne Admin und keine leeren Gruppen.
 - Der Supabase anon-Key ist öffentlich by design und darf ins Frontend. Der service-role-Key NIEMALS.
 
 ## Datenmodell (Supabase)
 
-Vollständig mit Funktionen, Rechten und Policies in `supabase/migrations/`. Kurzfassung (Stand nach 007):
+Vollständig mit Funktionen, Rechten und Policies in `supabase/migrations/`. Kurzfassung (Stand nach 008):
 
 ```sql
 create table profiles (
@@ -57,7 +57,7 @@ create table profiles (
 
 create table groups (
   slug text primary key,
-  name text not null,
+  name text not null,                  -- 1 bis 60 Zeichen (Check ab 008, nur für neue/geänderte Namen)
   password_hash text,
   join_code text not null unique,      -- 8 Zeichen aus 34679AFHKRTXY, per Trigger vergeben
   created_by uuid default auth.uid() references auth.users(id) on delete set null,

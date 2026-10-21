@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useJoinCode } from '../hooks/useJoinCode'
 import { formatJoinCode } from '../lib/joinCode'
@@ -13,18 +13,21 @@ interface Props {
   groupName: string
   members: Member[]
   userId: string
+  onRenamed: (name: string) => void
   onClose: () => void
 }
 
-// "Gruppe verwalten": Mitglieder und Admins, Beitritts-Code, Gruppe löschen (Admins), Gruppe verlassen.
-// Geprüft wird serverseitig (set_member_role, delete_group in 006_admin.sql, leave_group in 003);
+// "Gruppe verwalten": Gruppenname (Admins), Mitglieder und Admins, Beitritts-Code, Gruppe löschen (Admins), Gruppe verlassen.
+// Geprüft wird serverseitig (set_member_role, delete_group in 006_admin.sql, rename_group in 008,
+// leave_group in 003);
 // hier nur die Oberfläche.
-export default function ManageGroupSheet({ groupSlug, groupName, members, userId, onClose }: Props) {
+export default function ManageGroupSheet({ groupSlug, groupName, members, userId, onRenamed, onClose }: Props) {
   const isAdmin = members.some((m) => m.user_id === userId && m.role === 'admin')
 
   return (
     <Sheet title="Gruppe verwalten" subtitle={groupName} onClose={onClose}>
       <div className="space-y-6">
+        {isAdmin && <RenameGroup groupSlug={groupSlug} groupName={groupName} onRenamed={onRenamed} />}
         <MemberList groupSlug={groupSlug} members={members} userId={userId} isAdmin={isAdmin} />
         <JoinCodeRow groupSlug={groupSlug} />
         <section aria-label="Gruppe verlassen oder löschen" className="space-y-3 border-t border-line pt-5">
@@ -33,6 +36,77 @@ export default function ManageGroupSheet({ groupSlug, groupName, members, userId
         </section>
       </div>
     </Sheet>
+  )
+}
+
+// Längengrenze wie groups_name_length und rename_group (008)
+const MAX_NAME_LENGTH = 60
+
+interface RenameGroupProps {
+  groupSlug: string
+  groupName: string
+  onRenamed: (name: string) => void
+}
+
+function RenameGroup({ groupSlug, groupName, onRenamed }: RenameGroupProps) {
+  const [name, setName] = useState(groupName)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [saved, setSaved] = useState(false)
+  const trimmed = name.trim()
+  const changed = trimmed !== groupName
+  const valid = trimmed.length >= 1 && trimmed.length <= MAX_NAME_LENGTH
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    if (!changed || !valid) return
+    setBusy(true)
+    setError(null)
+    const { data, error } = await getSupabase().rpc('rename_group', { p_group_slug: groupSlug, p_name: trimmed })
+    setBusy(false)
+    if (error) {
+      setError(`Umbenennen hat nicht geklappt: ${error.message}`)
+      return
+    }
+    const newName = (data as string | null) ?? trimmed
+    setName(newName)
+    setSaved(true)
+    onRenamed(newName)
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-2">
+      <label htmlFor="group-name" className="text-label block">
+        Gruppenname
+      </label>
+      <div className="flex gap-2">
+        <input
+          id="group-name"
+          type="text"
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value)
+            setError(null)
+            setSaved(false)
+          }}
+          maxLength={MAX_NAME_LENGTH}
+          required
+          className="field min-w-0 flex-1"
+        />
+        <button type="submit" disabled={busy || !changed || !valid} className="btn btn-primary shrink-0">
+          {busy ? 'Speichere…' : 'Speichern'}
+        </button>
+      </div>
+      {error ? (
+        <p className="text-sm text-no-ink">{error}</p>
+      ) : saved && !changed ? (
+        <p className="text-sm text-yes-ink" aria-live="polite">
+          ✓ Gespeichert. Alle in der Gruppe sehen den neuen Namen.
+        </p>
+      ) : (
+        <p className="text-xs text-muted">Link und Beitritts-Code bleiben gleich.</p>
+      )}
+    </form>
   )
 }
 
