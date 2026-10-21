@@ -50,7 +50,7 @@ Als CSS-Variablen anlegen (z.B. in einer globalen CSS-Datei), Light und Dark. Da
 
 ### Typografie
 Fonts via Google Fonts oder @fontsource.
-- **Display/große Überschriften:** Fraunces (Serif, warm, mit SOFT-Achse 50). Gewichte 600-700. Bewusst sparsam: nur Seitentitel ("Gruppenkalender", Gruppenname, "Einstellungen"), Hero-Termin, Rundentitel und "Beste Termine". Alles andere, auch Karten- und Sheet-Titel und Monatsnamen, in Hanken Grotesk. (Ersetzt Bricolage Grotesque.)
+- **Display/große Überschriften:** Fraunces (Serif, warm, mit SOFT-Achse 50). Gewichte 600-700. Bewusst sparsam: nur Seitentitel ("Gruppenkalender", Gruppenname, "Einstellungen"), Hero-Termin, Rundentitel, "Beste Termine" und "Kalender". Alles andere, auch Karten- und Sheet-Titel und Monatsnamen, in Hanken Grotesk. (Ersetzt Bricolage Grotesque.)
 - **Body/UI:** Hanken Grotesk (sauber, gut lesbar). Gewichte 400/500/600/700.
 - Immer mit System-Fallback-Stack.
 

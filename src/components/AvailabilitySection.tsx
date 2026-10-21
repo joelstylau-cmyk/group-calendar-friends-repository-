@@ -50,7 +50,7 @@ export default function AvailabilitySection({
     <section className="card space-y-4 p-4" aria-label="Verfügbarkeit">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-h2">Kalender</h2>
+          <h2 className="text-headline">Kalender</h2>
           <p className="text-small text-muted">
             Du: {answered} von {openDays.length} Tagen eingetragen
           </p>
