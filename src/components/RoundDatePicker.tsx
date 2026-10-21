@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState, type PointerEvent } from 'react'
 import {
   addDays,
   dayCount,
@@ -23,7 +23,8 @@ interface Props {
   // Frühester wählbarer Tag (beim Anlegen heute), beim Bearbeiten keiner
   minDate?: string
   onRangeChange: (start: string, end: string) => void
-  onToggleExcluded: (iso: string) => void
+  // Tag sperren (true) oder freigeben (false)
+  onSetExcluded: (iso: string, excluded: boolean) => void
 }
 
 type Mode = 'range' | 'exclude'
@@ -40,7 +41,7 @@ const longDay = new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: 'numeri
 
 // Zeitfenster einer Runde direkt im Monatskalender wählen: erster Tipp Start, zweiter Tipp Ende,
 // der Bereich dazwischen färbt sich. Danach im selben Kalender einzelne Tage sperren.
-export default function RoundDatePicker({ start, end, excluded, minDate, onRangeChange, onToggleExcluded }: Props) {
+export default function RoundDatePicker({ start, end, excluded, minDate, onRangeChange, onSetExcluded }: Props) {
   const rangeComplete = Boolean(start && end && end >= start && dayCount(start, end) <= MAX_WINDOW_DAYS)
   const pickingEnd = Boolean(start && !end)
   const [mode, setMode] = useState<Mode>('range')
@@ -58,6 +59,39 @@ export default function RoundDatePicker({ start, end, excluded, minDate, onRange
 
   const latestEnd = start ? addDays(start, MAX_WINDOW_DAYS - 1) : null
   const excludedSet = new Set(excluded)
+
+  // Sperren per Tippen oder Ziehen, wie beim Verfügbarkeit-Malen: Der erste Tag eines Strichs
+  // entscheidet (gesperrt -> freigeben, sonst sperren), alle weiteren berührten Tage bekommen dasselbe.
+  const strokeRef = useRef<{ value: boolean; visited: Set<string> } | null>(null)
+
+  function dayAt(x: number, y: number): string | null {
+    const el = document.elementFromPoint(x, y)?.closest<HTMLElement>('[data-exclude]')
+    return el?.dataset.exclude ?? null
+  }
+
+  function handlePointerDown(e: PointerEvent<HTMLDivElement>) {
+    if (activeMode !== 'exclude') return
+    const iso = dayAt(e.clientX, e.clientY)
+    if (!iso) return
+    e.preventDefault()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    const value = !excludedSet.has(iso)
+    strokeRef.current = { value, visited: new Set([iso]) }
+    onSetExcluded(iso, value)
+  }
+
+  function handlePointerMove(e: PointerEvent<HTMLDivElement>) {
+    const stroke = strokeRef.current
+    if (!stroke) return
+    const iso = dayAt(e.clientX, e.clientY)
+    if (!iso || stroke.visited.has(iso)) return
+    stroke.visited.add(iso)
+    onSetExcluded(iso, stroke.value)
+  }
+
+  function endStroke() {
+    strokeRef.current = null
+  }
 
   function handleRangeTap(iso: string) {
     if (pickingEnd && iso >= start) {
@@ -87,7 +121,7 @@ export default function RoundDatePicker({ start, end, excluded, minDate, onRange
 
   const hint =
     activeMode === 'exclude'
-      ? 'Tipp Tage an, die nicht in Frage kommen. Nochmal tippen hebt die Sperre auf.'
+      ? 'Tipp Tage an oder zieh mit dem Finger drüber, wenn sie nicht in Frage kommen. Auf gesperrten Tagen beginnen hebt die Sperre wieder auf.'
       : pickingEnd
         ? `Jetzt den letzten Tag antippen (höchstens ${MAX_WINDOW_DAYS} Tage).`
         : start
@@ -134,7 +168,14 @@ export default function RoundDatePicker({ start, end, excluded, minDate, onRange
         </div>
 
         {/* Zellen 44px hoch und so breit wie möglich (-mx-1), damit sie sich auf dem Handy gut treffen lassen */}
-        <div className="-mx-1 grid grid-cols-7 gap-1 text-center">
+        <div
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={endStroke}
+          onPointerCancel={endStroke}
+          // Nur beim Sperren Gesten abfangen (Ziehen statt Scrollen), sonst normal scrollen
+          className={`-mx-1 grid grid-cols-7 gap-1 text-center ${activeMode === 'exclude' ? 'touch-none select-none' : ''}`}
+        >
           {WEEKDAYS.map((w) => (
             <div key={w} className="pb-1 text-[11px] font-semibold text-muted">
               {w}
@@ -159,7 +200,11 @@ export default function RoundDatePicker({ start, end, excluded, minDate, onRange
                 <button
                   key={iso}
                   type="button"
-                  onClick={() => onToggleExcluded(iso)}
+                  data-exclude={iso}
+                  // Nur Tastatur-Klicks (detail 0) behandeln, Zeiger laufen über die Pointer-Events.
+                  onClick={(e) => {
+                    if (e.detail === 0) onSetExcluded(iso, !isExcluded)
+                  }}
                   aria-pressed={isExcluded}
                   aria-label={`${label}${isExcluded ? ', gesperrt' : ''}`}
                   className={

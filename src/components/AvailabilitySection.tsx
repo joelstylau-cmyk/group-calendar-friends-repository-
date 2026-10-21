@@ -17,6 +17,8 @@ interface Props {
   total: number
   highlight: Set<string>
   onDayTap: (iso: string) => void
+  editing: boolean
+  onEditingChange: (editing: boolean) => void
 }
 
 export default function AvailabilitySection({
@@ -30,8 +32,9 @@ export default function AvailabilitySection({
   total,
   highlight,
   onDayTap,
+  editing,
+  onEditingChange: setEditing,
 }: Props) {
-  const [editing, setEditing] = useState(false)
   const [brush, setBrush] = useState<Brush>('yes')
 
   const myCounts = { yes: 0, maybe: 0, no: 0 }
@@ -50,16 +53,13 @@ export default function AvailabilitySection({
           <h2 className="text-h2">Kalender</h2>
           <p className="text-small text-muted">
             Du: {answered} von {openDays.length} Tagen eingetragen
-            {answered > 0 && (
-              <>
-                {' '}
-                ({DAY_STATUSES.filter((s) => myCounts[s] > 0)
-                  .map((s) => `${myCounts[s]} ${STATUS_META[s].glyph}`)
-                  .join(' · ')}
-                )
-              </>
-            )}
           </p>
+          {/* Eigene Zeile, beim Malen immer da: so bricht nichts um und der Kalender bleibt stehen */}
+          {(editing || answered > 0) && (
+            <p className="text-small whitespace-nowrap text-muted">
+              {DAY_STATUSES.map((s) => `${myCounts[s]} ${STATUS_META[s].glyph}`).join(' · ')}
+            </p>
+          )}
         </div>
         {/* Desktop: Aktion direkt am Kalender; mobil sitzt sie in der festen Leiste unten */}
         {!editing && (

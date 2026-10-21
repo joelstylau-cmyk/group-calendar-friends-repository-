@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useAvailabilityDraft } from '../hooks/useAvailabilityDraft'
 import { useLiveRows } from '../hooks/useLiveRows'
 import { dayCount, daysInRange, formatRange } from '../lib/dates'
@@ -28,6 +28,25 @@ export default function RoundView({ round, members, userId, onDeleted, onEdited 
   const draft = useAvailabilityDraft(round.id, userId, loaded ? (myRow?.days ?? {}) : null)
   const [sheetDays, setSheetDays] = useState<string[] | null>(null)
   const closeSheet = useCallback(() => setSheetDays(null), [])
+
+  // Verfügbarkeit malen: Solange gemalt wird, ist "Beste Termine" eingeklappt. Sonst ändert es
+  // bei jedem Strich seine Höhe und der Kalender darunter rutscht unter dem Finger weg.
+  const [painting, setPainting] = useState(false)
+  const calendarRef = useRef<HTMLDivElement>(null)
+  const calendarTopBefore = useRef<number | null>(null)
+
+  function changePainting(next: boolean) {
+    // Kalender beim Ein-/Ausklappen an derselben Bildschirmstelle halten
+    calendarTopBefore.current = calendarRef.current?.getBoundingClientRect().top ?? null
+    setPainting(next)
+  }
+
+  useLayoutEffect(() => {
+    const before = calendarTopBefore.current
+    calendarTopBefore.current = null
+    const after = calendarRef.current?.getBoundingClientRect().top
+    if (before !== null && after !== undefined && after !== before) window.scrollBy(0, after - before)
+  }, [painting])
 
   const windowDays = useMemo(() => daysInRange(round.start_date, round.end_date), [round.start_date, round.end_date])
   const [chosenRange, setLengthRange] = useState<LengthRange>(() => ({ min: 1, max: Math.min(3, windowDays.length) }))
@@ -109,26 +128,36 @@ export default function RoundView({ round, members, userId, onDeleted, onEdited 
         <p className="text-muted">Lade Verfügbarkeiten…</p>
       ) : (
         <>
-          <Dashboard
-            range={lengthRange}
-            maxLength={windowDays.length}
-            onRange={setLengthRange}
-            ranking={ranking}
-            total={people.length}
-            onOpen={setSheetDays}
-          />
-          <AvailabilitySection
-            round={round}
-            openDays={openDays}
-            myDays={draft.days}
-            saveStatus={draft.status}
-            onPaint={draft.update}
-            onRetry={draft.retry}
-            dayStats={dayStats}
-            total={people.length}
-            highlight={highlight}
-            onDayTap={(iso) => setSheetDays([iso])}
-          />
+          {painting ? (
+            <p className="rounded-[var(--r-md)] bg-surface-2 px-4 py-3 text-small text-muted">
+              <span className="font-semibold text-ink">Beste Termine</span> sind beim Eintragen eingeklappt und erscheinen nach „Fertig“ wieder.
+            </p>
+          ) : (
+            <Dashboard
+              range={lengthRange}
+              maxLength={windowDays.length}
+              onRange={setLengthRange}
+              ranking={ranking}
+              total={people.length}
+              onOpen={setSheetDays}
+            />
+          )}
+          <div ref={calendarRef}>
+            <AvailabilitySection
+              round={round}
+              openDays={openDays}
+              myDays={draft.days}
+              saveStatus={draft.status}
+              onPaint={draft.update}
+              onRetry={draft.retry}
+              dayStats={dayStats}
+              total={people.length}
+              highlight={highlight}
+              onDayTap={(iso) => setSheetDays([iso])}
+              editing={painting}
+              onEditingChange={changePainting}
+            />
+          </div>
         </>
       )}
 

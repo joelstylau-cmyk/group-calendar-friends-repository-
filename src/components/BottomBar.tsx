@@ -3,6 +3,11 @@ import { useLayoutEffect, useRef, type ReactNode } from 'react'
 // Abstand zwischen letztem Inhalt und Leiste
 const GAP_PX = 16
 
+// Wie viele Leisten gerade da sind. Beim Wechsel (z.B. normale Leiste -> Pinsel-Leiste) baut
+// React die alte ab, bevor die neue steht; der reservierte Platz darf in dem Moment nicht kurz
+// verschwinden, sonst kappt der Browser die Scroll-Position am Seitenende.
+let mountedBars = 0
+
 interface Props {
   children: ReactNode
   // Nur auf schmalen Bildschirmen zeigen (Desktop: Aktion bleibt im Inhalt)
@@ -24,6 +29,7 @@ export default function BottomBar({ children, mobileOnly = false }: Props) {
       const height = el.offsetHeight
       root.style.setProperty('--bottom-bar-space', height > 0 ? `${height + GAP_PX}px` : '0px')
     }
+    mountedBars++
     update()
     const observer = new ResizeObserver(update)
     observer.observe(el)
@@ -31,7 +37,11 @@ export default function BottomBar({ children, mobileOnly = false }: Props) {
     return () => {
       observer.disconnect()
       window.removeEventListener('resize', update)
-      root.style.removeProperty('--bottom-bar-space')
+      mountedBars--
+      // Erst nach dem Commit prüfen: kommt gleich eine neue Leiste, setzt sie ihren eigenen Wert.
+      queueMicrotask(() => {
+        if (mountedBars === 0) root.style.removeProperty('--bottom-bar-space')
+      })
     }
   }, [])
 

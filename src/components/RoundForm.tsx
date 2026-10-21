@@ -62,8 +62,8 @@ export default function RoundForm(props: Props) {
     setEnd(nextEnd)
   }
 
-  function toggleExcluded(iso: string) {
-    setExcluded((prev) => (prev.includes(iso) ? prev.filter((d) => d !== iso) : [...prev, iso]))
+  function setExcludedDay(iso: string, value: boolean) {
+    setExcluded((prev) => (value ? (prev.includes(iso) ? prev : [...prev, iso]) : prev.filter((d) => d !== iso)))
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -125,7 +125,7 @@ export default function RoundForm(props: Props) {
         excluded={excludedInRange}
         minDate={minDate}
         onRangeChange={handleRangeChange}
-        onToggleExcluded={toggleExcluded}
+        onSetExcluded={setExcludedDay}
       />
       {rangeError && <p className="text-sm text-no-ink">{rangeError}</p>}
 
