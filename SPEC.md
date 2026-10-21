@@ -42,7 +42,7 @@ Mobile-first Web-App, mit der Freundesgruppen pro Event einen Termin finden. Log
 
 ## Datenmodell (Supabase)
 
-Vollständig mit Funktionen, Rechten und Policies in `supabase/migrations/`. Kurzfassung (Stand nach 008):
+Vollständig mit Funktionen, Rechten und Policies in `supabase/migrations/`. Kurzfassung (Stand nach 009; 009 enthält nur `keepalive()` für den Keep-alive-Ping, siehe `.github/workflows/supabase-keepalive.yml`):
 
 ```sql
 create table profiles (
