@@ -37,4 +37,4 @@ export const DAY_STATUSES: DayStatus[] = ['yes', 'maybe', 'no']
 
 // Schraffur für gesperrte Tage
 export const HATCH =
-  'repeating-linear-gradient(135deg, color-mix(in srgb, var(--ink) 7%, transparent) 0 4px, transparent 4px 8px)'
+  'repeating-linear-gradient(135deg, var(--hatch-line) 0 4px, transparent 4px 8px)'

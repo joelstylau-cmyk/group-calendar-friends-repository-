@@ -180,35 +180,52 @@ function BrushBar({ brush, onBrush, status, onRetry, onDone }: BrushBarProps) {
   )
 }
 
+// Kompakt und immer sichtbar: Die Farben tragen Bedeutung, neue Mitglieder sollen sie sofort verstehen.
 function Legend({ editing }: { editing: boolean }) {
+  const item = 'flex min-w-0 items-center gap-2'
+  const swatch = 'flex w-7 shrink-0 justify-center'
   return (
-    <ul className="flex flex-wrap gap-x-4 gap-y-1.5 border-t border-line pt-3 text-xs text-muted">
-      <li className="flex items-center gap-1.5">
-        <span className="flex h-1.5 w-8 overflow-hidden rounded-full bg-faint/30">
-          <span className={`w-1/2 ${STATUS_META.yes.swatch}`} />
-          <span className={`w-1/4 ${STATUS_META.maybe.swatch}`} />
-          <span className={`w-1/8 ${STATUS_META.no.swatch}`} />
+    <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 border-t border-line pt-3 text-xs text-muted">
+      <li className={`${item} col-span-2`}>
+        <span className={swatch}>
+          <span className="flex h-1.5 w-7 overflow-hidden rounded-full bg-faint/30">
+            <span className={`w-1/2 ${STATUS_META.yes.swatch}`} />
+            <span className={`w-1/4 ${STATUS_META.maybe.swatch}`} />
+            <span className={`w-1/8 ${STATUS_META.no.swatch}`} />
+          </span>
         </span>
-        Balken: kann / vielleicht / keine Zeit / grau = offen
+        <span>
+          Balken: <span className={STATUS_META.yes.text}>kann</span> /{' '}
+          <span className={STATUS_META.maybe.text}>vielleicht</span> /{' '}
+          <span className={STATUS_META.no.text}>keine Zeit</span> / grau offen
+        </span>
       </li>
-      <li className="flex items-center gap-1.5">
-        <span className="text-[11px] font-bold text-yes-ink">3</span> so viele können
+      <li className={item}>
+        <span className={`${swatch} text-[11px] font-bold text-yes-ink`}>3</span>
+        so viele können
       </li>
-      <li className="flex items-center gap-1.5">
-        <span className="text-[11px] font-bold">
-          <span className={STATUS_META.yes.text}>✓</span> <span className={STATUS_META.maybe.text}>~</span>{' '}
+      <li className={item}>
+        <span className={`${swatch} gap-0.5 text-[11px] font-bold`}>
+          <span className={STATUS_META.yes.text}>✓</span>
+          <span className={STATUS_META.maybe.text}>~</span>
           <span className={STATUS_META.no.text}>✗</span>
         </span>
         dein Eintrag
       </li>
+      <li className={item}>
+        <span className={swatch}>
+          <span className="h-4 w-4 rounded-[5px] bg-surface-2" style={{ backgroundImage: HATCH }} />
+        </span>
+        gesperrt
+      </li>
       {!editing && (
-        <li className="flex items-center gap-1.5">
-          <span className="inline-block h-3.5 w-3.5 rounded ring-2 ring-accent" /> bester Termin
+        <li className={item}>
+          <span className={swatch}>
+            <span className="h-4 w-4 rounded-[5px] ring-2 ring-accent" />
+          </span>
+          bester Termin
         </li>
       )}
-      <li className="flex items-center gap-1.5">
-        <span className="inline-block h-4 w-4 rounded bg-surface-2" style={{ backgroundImage: HATCH }} /> gesperrt
-      </li>
     </ul>
   )
 }

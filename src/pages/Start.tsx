@@ -50,6 +50,7 @@ export default function Start() {
         )}
       </section>
 
+      {/* Ohne Karten: Abstand trennt, nur die Felder selbst heben sich ab */}
       <JoinByCodeForm />
 
       <CreateGroupForm />
@@ -94,10 +95,13 @@ function JoinByCodeForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="card space-y-3 p-5">
-      <label className="block space-y-1">
-        <span className="text-label">Mit Code beitreten</span>
+    <form onSubmit={handleSubmit} className="space-y-2">
+      <label htmlFor="join-code" className="text-h2 block">
+        Mit Code beitreten
+      </label>
+      <div className="flex gap-2">
         <input
+          id="join-code"
           type="text"
           value={code}
           onChange={(e) => {
@@ -110,17 +114,13 @@ function JoinByCodeForm() {
           autoComplete="off"
           autoCorrect="off"
           spellCheck={false}
-          className="field font-mono tracking-widest"
+          className="field min-w-0 flex-1 font-mono tracking-widest"
         />
-      </label>
+        <button type="submit" disabled={busy || !code.trim()} className="btn btn-secondary shrink-0">
+          {busy ? 'Trete bei…' : 'Beitreten'}
+        </button>
+      </div>
       {error && <p className="text-sm text-no-ink">{error}</p>}
-      <button
-        type="submit"
-        disabled={busy || !code.trim()}
-        className="btn btn-secondary w-full"
-      >
-        {busy ? 'Trete bei…' : 'Beitreten'}
-      </button>
     </form>
   )
 }
@@ -156,27 +156,26 @@ function CreateGroupForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="card space-y-3 p-5">
-      <label className="block space-y-1">
-        <span className="text-label">Name der neuen Gruppe</span>
+    <form onSubmit={handleSubmit} className="space-y-2">
+      <label htmlFor="new-group" className="text-h2 block">
+        Neue Gruppe anlegen
+      </label>
+      <div className="flex gap-2">
         <input
+          id="new-group"
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="z.B. Skiurlaub-Crew"
           maxLength={60}
           required
-          className="field"
+          className="field min-w-0 flex-1"
         />
-      </label>
+        <button type="submit" disabled={busy || !name.trim()} className="btn btn-primary shrink-0">
+          {busy ? 'Lege an…' : 'Anlegen'}
+        </button>
+      </div>
       {error && <p className="text-sm text-no-ink">{error}</p>}
-      <button
-        type="submit"
-        disabled={busy || !name.trim()}
-        className="btn btn-primary w-full"
-      >
-        {busy ? 'Lege an…' : 'Neue Gruppe anlegen'}
-      </button>
     </form>
   )
 }

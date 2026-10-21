@@ -51,7 +51,7 @@ export default function RoundsSection({ groupSlug, members, userId }: Props) {
     <section className="space-y-4" aria-label="Runden">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-label">Runden</h2>
-        <button type="button" onClick={() => setCreating(true)} className="btn btn-secondary px-3 text-sm">
+        <button type="button" onClick={() => setCreating(true)} className="btn btn-primary px-4 text-sm">
           + Neue Runde
         </button>
       </div>

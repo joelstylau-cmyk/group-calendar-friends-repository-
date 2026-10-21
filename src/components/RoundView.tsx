@@ -95,12 +95,12 @@ export default function RoundView({ round, members, userId, onDeleted, onEdited 
     <article className="space-y-6">
       <header className="space-y-1">
         <div className="flex items-start justify-between gap-3">
-          <h2 className="font-display text-[22px] leading-tight font-bold break-words">{round.title}</h2>
+          <h2 className="text-headline break-words">{round.title}</h2>
           {canManage && (
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="btn btn-secondary shrink-0 px-3 text-sm"
+              className="btn btn-ghost -mr-2 shrink-0 px-3 text-sm text-accent-ink"
             >
               Bearbeiten
             </button>

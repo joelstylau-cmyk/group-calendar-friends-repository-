@@ -19,7 +19,7 @@ export default function Login() {
   return (
     <main className="mx-auto max-w-md space-y-8 px-4 py-16">
       <header className="space-y-2">
-        <h1 className="text-3xl font-bold">Gruppenkalender</h1>
+        <h1 className="text-display">Gruppenkalender</h1>
         <p className="text-muted">Termin mit Freunden finden. Melde dich an, um weiterzumachen.</p>
       </header>
 

@@ -132,7 +132,7 @@ export default function RoundDatePicker({ start, end, excluded, minDate, onRange
     <div className="space-y-3">
       <div className="space-y-1">
         <p className="text-label">Zeitraum</p>
-        <p className="font-display text-[17px] font-bold">
+        <p className="text-[17px] font-bold">
           {rangeComplete
             ? `${formatRange(start, end)} · ${dayCount(start, end)} ${dayCount(start, end) === 1 ? 'Tag' : 'Tage'}`
             : start
@@ -163,7 +163,7 @@ export default function RoundDatePicker({ start, end, excluded, minDate, onRange
       <section aria-label={formatMonth(year, month)}>
         <div className="mb-2 flex items-center justify-between">
           <MonthButton dir="prev" disabled={shown <= lo} onClick={() => setView(shown - 1)} />
-          <h3 className="font-display text-[15px] font-bold">{formatMonth(year, month)}</h3>
+          <h3 className="text-[15px] font-bold">{formatMonth(year, month)}</h3>
           <MonthButton dir="next" disabled={shown >= hi} onClick={() => setView(shown + 1)} />
         </div>
 

@@ -108,7 +108,7 @@ function GroupView({ group, onMembershipLost }: { group: GroupRow; onMembershipL
           <h1 className="text-display min-w-0 break-words">{group.name}</h1>
           {isMember && (
             <div className="flex shrink-0 items-center gap-2">
-              <button type="button" onClick={() => setSheet('share')} className="btn btn-secondary px-3 text-sm">
+              <button type="button" onClick={() => setSheet('share')} className="btn btn-outline px-4 text-sm">
                 Teilen
               </button>
               <button
@@ -116,7 +116,7 @@ function GroupView({ group, onMembershipLost }: { group: GroupRow; onMembershipL
                 onClick={() => setSheet('manage')}
                 aria-label="Gruppe verwalten"
                 title="Gruppe verwalten"
-                className="btn btn-secondary w-11 px-0"
+                className="btn btn-ghost -mr-2 w-11 px-0"
               >
                 <GearIcon />
               </button>

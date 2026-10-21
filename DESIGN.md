@@ -50,14 +50,15 @@ Als CSS-Variablen anlegen (z.B. in einer globalen CSS-Datei), Light und Dark. Da
 
 ### Typografie
 Fonts via Google Fonts oder @fontsource.
-- **Display/Überschriften:** Bricolage Grotesque (charaktervoll, modern, nicht generisch). Gewichte 700/800.
+- **Display/große Überschriften:** Fraunces (Serif, warm, mit SOFT-Achse 50). Gewichte 600-700. Bewusst sparsam: nur Seitentitel ("Gruppenkalender", Gruppenname, "Einstellungen"), Hero-Termin, Rundentitel und "Beste Termine". Alles andere, auch Karten- und Sheet-Titel und Monatsnamen, in Hanken Grotesk. (Ersetzt Bricolage Grotesque.)
 - **Body/UI:** Hanken Grotesk (sauber, gut lesbar). Gewichte 400/500/600/700.
 - Immer mit System-Fallback-Stack.
 
 Skala (Richtwerte, mobil):
 ```
-Hero/Display   28px / 800 / tight letter-spacing
-H2             18px / 700
+Hero/Display   30px / 650 / Fraunces, leicht enges letter-spacing   (.text-display)
+Headline       23px / 600 / Fraunces                                (.text-headline)
+H2             17px / 700 / Hanken Grotesk                          (.text-h2)
 Body           15-16px / 400-500
 Small          13px / 500
 Label          12.5px / 600, sentence case (KEINE All-Caps-Labels)
@@ -81,11 +82,13 @@ Karten bekommen `--shadow-sm` plus sehr dezente Border, nicht die harte Hairline
 
 ## Komponenten-Prinzipien
 
-- **Buttons:** Primär = gefüllt Akzent. Sekundär = `--surface-2` mit `--ink`. Destruktiv (löschen, verlassen) = dezent, nicht knallrot-fett, Text in `--no`. Grosse Touch-Fläche (min. 44px hoch).
+- **Buttons:** Pro Screen ist klar, was die Hauptaktion ist. Primär (`.btn-primary`) = gefüllt Akzent, z.B. "+ Neue Runde". Outline (`.btn-outline`) = Akzent-Kontur, Text in `--accent-ink`, für die zweitwichtigste Aktion, z.B. "Teilen". Ghost (`.btn-ghost`) = Text- oder Icon-Knopf ohne Fläche (Fläche erst beim Hover), für Nebenaktionen wie "Bearbeiten", Zahnrad, "Mehr anzeigen". Sekundär (`.btn-secondary`) = `--surface-2` mit `--ink`, für neutrale Aktionen wie "Abbrechen", "Beitreten". Destruktiv (löschen, verlassen) = dezent, nicht knallrot-fett, Text in `--no`. Grosse Touch-Fläche (min. 44px hoch).
 - **Avatare/Chips:** runde Avatare mit Farbe aus der User-ID plus Initialen oder Emoji. Chips mit weichem `--surface`-Hintergrund, kein harter Rahmen.
 - **Kalender-Grid:** die eine mutige Stelle. Zellen mit `--surface-2`, klare Zahlen, der Heatmap-Balken (yes/maybe/no) als dünner Streifen unten, Count der Verfügbaren oben rechts. Ausserhalb/gesperrt klar gedämpft. Im Edit-Modus Zelle kräftig in Status-Farbe plus Glyph (checkmark / tilde / x).
 - **Heatmap-Balken:** die drei Status-Farben, nie nur über Farbe (immer auch Glyph/Legende), damit es auch farbfehlsichtig lesbar bleibt.
-- **Dashboard "Beste Termine":** die Konsens-Karte ist der sichtbarste Block nach dem Hero. Ruhig, eine klare Zahl pro Vorschlag.
+- **Dashboard "Beste Termine":** die Konsens-Karte ist der sichtbarste Block nach dem Hero. Ruhig, eine klare Zahl pro Vorschlag. Unter dem Hero erst 2 weitere Vorschläge, "Mehr anzeigen" klappt schrittweise je 3 mehr auf.
+- **Legende am Kalender:** immer sichtbar (die Farben tragen Bedeutung, neue Mitglieder brauchen sie sofort), kompakt als 2-Spalten-Mini-Grid mit fester Symbolspalte. Das Symbol für "gesperrt" ist dieselbe Schraffur wie die Zellen (`--hatch-line`, im Dunkelmodus kräftiger).
+- **Karten sparsam:** Karten nur, wo sie Inhalt bündeln (Gruppenliste, Hero, Kalender, Vorschlagsliste). Formulare wie "Mit Code beitreten" oder "Neue Gruppe anlegen" liegen direkt auf dem Hintergrund, Abstand trennt, nur die Felder heben sich ab.
 - Alles andere bleibt leise. Nur Hero, Kalender und Dashboard dürfen Präsenz haben.
 
 ## Konkrete Umbauten (die Punkte aus dem Feedback)

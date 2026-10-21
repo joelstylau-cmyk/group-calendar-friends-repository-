@@ -17,6 +17,10 @@ interface Props {
   onOpen: (days: string[]) => void
 }
 
+// Weitere Vorschläge unter dem Hero: erst wenige, dann schrittweise mehr
+const OTHERS_INITIAL = 2
+const OTHERS_STEP = 3
+
 const daysLabel = (n: number) => `${n} ${n === 1 ? 'Tag' : 'Tage'}`
 
 // [3, 4, 6, 7, 8] -> "3–4 und 6–8 Tage"
@@ -34,6 +38,9 @@ function formatLengths(lengths: number[]): string {
 
 export default function Dashboard({ range, maxLength, onRange, ranking, total, onOpen }: Props) {
   const [best, ...others] = ranking.blocks
+  const [othersShown, setOthersShown] = useState(OTHERS_INITIAL)
+  const visibleOthers = others.slice(0, othersShown)
+  const hiddenCount = others.length - visibleOthers.length
   const rangeText = range.min === range.max ? daysLabel(range.min) : `${range.min} bis ${range.max} Tage`
 
   function setMin(min: number) {
@@ -46,7 +53,7 @@ export default function Dashboard({ range, maxLength, onRange, ranking, total, o
   return (
     <section className="space-y-3" aria-label="Beste Termine">
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-        <h2 className="text-h2">Beste Termine</h2>
+        <h2 className="text-headline">Beste Termine</h2>
         <div className="flex items-center gap-1.5 text-small text-muted">
           <Stepper label="Mindestlänge in Tagen" value={range.min} min={1} max={maxLength} onChange={setMin} />
           <span>bis</span>
@@ -79,7 +86,7 @@ export default function Dashboard({ range, maxLength, onRange, ranking, total, o
 
           {others.length > 0 && (
             <ol className="card divide-y divide-line overflow-hidden">
-              {others.map((b) => (
+              {visibleOthers.map((b) => (
                 <li key={`${b.days[0]}-${b.days.length}`}>
                   <button
                     type="button"
@@ -93,7 +100,7 @@ export default function Dashboard({ range, maxLength, onRange, ranking, total, o
                     {/* Eine klare Zahl pro Vorschlag */}
                     <span className="flex shrink-0 items-center gap-2">
                       <span className="text-right leading-tight">
-                        <span className={`block font-display text-xl font-bold ${STATUS_META.yes.text}`}>
+                        <span className={`block text-xl font-bold ${STATUS_META.yes.text}`}>
                           {STATUS_META.yes.glyph} {b.yes.length}
                         </span>
                         <span className="block text-[11px] text-muted">
@@ -108,6 +115,27 @@ export default function Dashboard({ range, maxLength, onRange, ranking, total, o
                 </li>
               ))}
             </ol>
+          )}
+
+          {hiddenCount > 0 ? (
+            <button
+              type="button"
+              onClick={() => setOthersShown((n) => n + OTHERS_STEP)}
+              className="btn btn-ghost w-full text-sm text-accent-ink"
+            >
+              Mehr anzeigen (+{Math.min(OTHERS_STEP, hiddenCount)})
+            </button>
+          ) : (
+            othersShown > OTHERS_INITIAL &&
+            others.length > OTHERS_INITIAL && (
+              <button
+                type="button"
+                onClick={() => setOthersShown(OTHERS_INITIAL)}
+                className="btn btn-ghost w-full text-sm"
+              >
+                Weniger anzeigen
+              </button>
+            )
           )}
 
           {ranking.emptyLengths.length > 0 && (
